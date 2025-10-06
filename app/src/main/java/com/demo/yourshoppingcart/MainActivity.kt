@@ -14,12 +14,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.demo.yourshoppingcart.ui.home.HomeScreen
 import com.demo.yourshoppingcart.ui.theme.YourShoppingCartTheme
 import com.google.firebase.Firebase
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val db = Firebase.firestore
         enableEdgeToEdge()
         setContent {
             YourShoppingCartTheme {
@@ -48,5 +50,13 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 fun GreetingPreview() {
     YourShoppingCartTheme {
         Greeting("Android")
+    }
+
+    FirebaseFirestore.getInstance().collection("category").get().addOnCompleteListener {
+        if (it.isSuccessful) {
+
+        }else {
+            it.exception
+        }
     }
 }

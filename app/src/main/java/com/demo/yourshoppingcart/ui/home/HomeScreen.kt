@@ -1,5 +1,6 @@
 package com.demo.yourshoppingcart.ui.home
 
+import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -36,16 +37,22 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.runtime.LaunchedEffect
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.demo.yourshoppingcart.R
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlin.getValue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     isDarkTheme: Boolean,
-    onThemeToggle: (isDark: Boolean) -> Boolean,
-    onCartClick: () -> Unit
+    onThemeToggle: (isDark: Boolean) -> Unit,
+    onCartClick: () -> Unit,
 ) {
+    val homeViewModel = hiltViewModel<HomeViewModel>()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -80,10 +87,10 @@ fun HomeScreen(
             // Categories Section
             CategoryList(
                 categories = listOf(
-                    Category("Electronics", ""),
-                    Category("Clothes", ""),
-                    Category("Shoes", ""),
-                    Category("Books", "")
+                    Category("Electronics", "https://via.placeholder.com/150"),
+                    Category("Clothes", "https://via.placeholder.com/150"),
+                    Category("Shoes", "https://via.placeholder.com/150"),
+                    Category("Books", "https://via.placeholder.com/150")
                 )
             )
 
@@ -98,6 +105,10 @@ fun HomeScreen(
                 )
             )
         }
+    }
+
+    LaunchedEffect(Unit) {
+        homeViewModel.getAllCategory()
     }
 }
 

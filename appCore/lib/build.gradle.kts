@@ -22,4 +22,12 @@ dependencies {
 
     //Ktor
     implementation(libs.ktor.serialization)
+
+    /*//Firebase
+    implementation(platform(libs.firebase.bom))
+    //implementation(libs.firebase.firestore)
+    implementation(libs.firebase.firestore.ktx)*/
+
+    //Coroutine
+    implementation(libs.kotlinx.coroutines.play.services)
 }
