@@ -29,3 +29,14 @@ abstract class HomeEntity {
         val category: String
     )
 }
+
+data class TestEntity(
+    val id: Long,
+    val name: String,
+)
+
+
+typealias TestModel = TestEntity;
+
+
+val dataModel = TestModel(id = 1, name = "mayur")

@@ -1,9 +1,11 @@
 package com.demo.yourshoppingcart
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -17,46 +19,35 @@ import com.google.firebase.Firebase
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import dagger.hilt.android.AndroidEntryPoint
+import androidx.compose.runtime.collectAsState
+import com.demo.yourshoppingcart.common.StorageKeys
+import com.demo.yourshoppingcart.framework.storage.StorageProvider
+import com.demo.yourshoppingcart.framework.storage.StorageProviderImpl
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val viewModel: MainViewModel by viewModels()
+        val storageProvider = StorageProviderImpl(context = application.applicationContext)
+        viewModel.getView(storageProvider.getBoolean(StorageKeys.APP_THEME) == true)
+
         enableEdgeToEdge()
         setContent {
-            YourShoppingCartTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                   /* Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )*/
-                    HomeScreen(isDarkTheme = true, { true },{})
-                }
+            val isDark = viewModel.viewState.collectAsState().value.isDark
+            YourShoppingCartTheme(darkTheme = isDark) {
+                HomeScreen(
+                    isDarkTheme = isDark,
+                    onThemeToggle = {
+                        storageProvider.putBoolean(StorageKeys.APP_THEME,it)
+                        viewModel.updateViewTheme(it)
+                    },
+                    onCartClick = {
+                        //Navigate to Cart Screen
+                    }
+                )
             }
-        }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    YourShoppingCartTheme {
-        Greeting("Android")
-    }
-
-    FirebaseFirestore.getInstance().collection("category").get().addOnCompleteListener {
-        if (it.isSuccessful) {
-
-        }else {
-            it.exception
         }
     }
 }

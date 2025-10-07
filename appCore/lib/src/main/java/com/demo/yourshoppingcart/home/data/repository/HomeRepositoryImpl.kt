@@ -27,9 +27,9 @@ class HomeRepositoryImpl (private val source: HomeSource): HomeRepository {
         }
     }
 
-    override suspend fun getSelectedCategoryItem(catId: String): Resource<HomeEntity.CategoryItemResponseEntity> {
+    override suspend fun getSelectedCategoryItem(cat: String): Resource<HomeEntity.CategoryItemResponseEntity> {
         try {
-            val data = source.getSelectedCategoryItem(catId)
+            val data = source.getSelectedCategoryItem(cat)
             return Resource.Data(HomeModel.CategoryItemResponse.toEntity(data))
         }catch (e: Exception) {
             return Resource.Error(e)

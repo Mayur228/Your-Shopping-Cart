@@ -2,6 +2,7 @@ package com.demo.yourshoppingcart
 
 import android.app.Application
 import com.demo.yourshoppingcart.common.network.config.ApiDomains
+import com.demo.yourshoppingcart.framework.firebase.DocumentApiFirebaseImpl
 import com.google.firebase.Firebase
 import com.google.firebase.FirebaseApp
 import com.google.firebase.firestore.FirebaseFirestore
