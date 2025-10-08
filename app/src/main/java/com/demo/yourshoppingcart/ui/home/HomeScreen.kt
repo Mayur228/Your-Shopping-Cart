@@ -31,6 +31,7 @@ fun HomeScreen(
     isDarkTheme: Boolean,
     onThemeToggle: (isDark: Boolean) -> Unit,
     onCartClick: () -> Unit,
+    onItemClick: (itemId: String) -> Unit,
 ) {
     val homeViewModel = hiltViewModel<HomeViewModel>()
     val view by homeViewModel.viewState.collectAsState()
@@ -93,6 +94,7 @@ fun HomeScreen(
                             items = view.items,
                             onItemSelected = {
                                 //Navigate to Details Screen
+                                onItemClick(it)
                             }
                         )
                     }

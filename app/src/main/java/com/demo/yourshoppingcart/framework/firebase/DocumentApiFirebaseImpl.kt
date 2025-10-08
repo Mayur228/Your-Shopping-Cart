@@ -2,7 +2,9 @@ package com.demo.yourshoppingcart.framework.firebase
 
 import com.demo.yourshoppingcart.common.network.DocumentApi
 import com.demo.yourshoppingcart.home.data.model.HomeModel
+import com.demo.yourshoppingcart.product_details.data.model.ProductDetailsModel
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.getField
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -63,5 +65,20 @@ class DocumentApiFirebaseImpl @Inject constructor (
 
     override suspend fun fetchSingleData(): Map<String, String> {
         TODO("Not yet implemented")
+    }
+
+    override suspend fun fetchProductDetails(itemId: String): ProductDetailsModel.DetailModel {
+        val collection = firestore.collection("categoryItem").whereEqualTo("itemId",itemId).get().await()
+
+        val data = collection.documents.firstOrNull()
+
+        val itemData = ProductDetailsModel.DetailModel(
+            itemId = data?.getString("itemId") ?: "",
+            itemName = data?.getString("itemName") ?: "",
+            itemImages =  data?.get("itemImages") as? List<String> ?: emptyList(),
+            itemDescription = data?.getString("itemDes") ?: "",
+            itemPrice = data?.getString("itemPrice") ?: ""
+        )
+        return itemData
     }
 }

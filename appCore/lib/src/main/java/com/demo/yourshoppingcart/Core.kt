@@ -6,6 +6,7 @@ import com.demo.yourshoppingcart.common.network.config.ApiDomains
 import com.demo.yourshoppingcart.home.domain.usecase.GetAllItemUseCase
 import com.demo.yourshoppingcart.home.domain.usecase.GetCategoryUseCase
 import com.demo.yourshoppingcart.home.domain.usecase.GetSelectedCategoryItemUseCase
+import com.demo.yourshoppingcart.product_details.domain.usecase.GetProductDetailsUseCase
 import org.koin.core.context.GlobalContext.get
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
@@ -42,6 +43,11 @@ object Core {
             get() = get().get()
 
         val getSelectedCategoryItemUseCase: GetSelectedCategoryItemUseCase
+            get() = get().get()
+    }
+
+    object ProductDetails {
+        val getProductDetailsUseCase: GetProductDetailsUseCase
             get() = get().get()
     }
 }

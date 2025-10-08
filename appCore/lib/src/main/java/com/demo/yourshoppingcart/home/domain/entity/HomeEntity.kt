@@ -39,4 +39,4 @@ data class TestEntity(
 typealias TestModel = TestEntity;
 
 
-val dataModel = TestModel(id = 1, name = "mayur")
+val dataModel = TestModel(id = 1, name = "username")
