@@ -26,7 +26,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -38,19 +37,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.demo.yourshoppingcart.common.QuantityView
+import com.demo.yourshoppingcart.common.QuantityViewModel
 import com.demo.yourshoppingcart.home.domain.entity.HomeEntity
 
 @Composable
 fun ItemList(
     items: List<HomeEntity.ItemEntity>,
-    onItemSelected: (itemId: String) -> Unit
+    onItemSelected: (itemId: String) -> Unit,
+    quantityViewModel: QuantityViewModel
 ) {
     LazyColumn(
         modifier = Modifier.padding(8.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(items) { item ->
-            var quantity by remember { mutableIntStateOf(0) }
 
             Card(
                 modifier = Modifier
@@ -98,40 +99,45 @@ fun ItemList(
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    if (quantity == 0) {
-                        Button(
-                            onClick = { quantity = 1 },
-                            shape = RoundedCornerShape(50),
-                            modifier = Modifier.height(40.dp)
-                        ) {
-                            Text(text = "Add")
-                        }
-                    } else {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            IconButton(
-                                onClick = { if (quantity > 0) quantity-- }
+                    QuantityView(
+                        productId = item.id,
+                        viewModel = quantityViewModel
+                    ) { quantity, onIncrease, onDecrease ->
+                        if (quantity == 0) {
+                            Button(
+                                onClick = { onIncrease() },
+                                shape = RoundedCornerShape(50),
+                                modifier = Modifier.height(40.dp)
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Remove,
-                                    contentDescription = "Remove"
-                                )
+                                Text(text = "Add")
                             }
-
-                            Text(
-                                text = quantity.toString(),
-                                modifier = Modifier.width(24.dp),
-                                textAlign = TextAlign.Center
-                            )
-
-                            IconButton(
-                                onClick = { quantity++ }
+                        } else {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Add,
-                                    contentDescription = "Add"
+                                IconButton(
+                                    onClick = { onDecrease() }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Remove,
+                                        contentDescription = "Remove"
+                                    )
+                                }
+
+                                Text(
+                                    text = quantity.toString(),
+                                    modifier = Modifier.width(24.dp),
+                                    textAlign = TextAlign.Center
                                 )
+
+                                IconButton(
+                                    onClick = { onIncrease() }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = "Add"
+                                    )
+                                }
                             }
                         }
                     }

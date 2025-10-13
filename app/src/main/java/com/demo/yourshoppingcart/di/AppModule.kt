@@ -4,6 +4,8 @@ import com.demo.yourshoppingcart.framework.firebase.DocumentApiFirebaseImpl
 import com.demo.yourshoppingcart.common.network.DocumentApi
 import com.demo.yourshoppingcart.common.network.config.ApiDomains
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import dagger.Binds
@@ -27,6 +29,11 @@ abstract class AppModule {
         @Provides
         fun provideFirebaseFireStore(): FirebaseFirestore {
             return Firebase.firestore
+        }
+
+        @Provides
+        fun provideFirebaseAuth(): FirebaseAuth {
+            return Firebase.auth
         }
     }
 

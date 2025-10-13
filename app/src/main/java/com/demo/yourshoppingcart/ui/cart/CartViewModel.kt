@@ -1,38 +1,44 @@
 package com.demo.yourshoppingcart.ui.cart
 
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.demo.yourshoppingcart.Resource
-import com.demo.yourshoppingcart.user.data.model.UserModel
+import com.demo.yourshoppingcart.user.domain.entity.cartEntity
 import com.demo.yourshoppingcart.user.domain.usecase.AddCartUseCase
 import com.demo.yourshoppingcart.user.domain.usecase.GetCartUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class CartViewModel @Inject constructor(
     private val getCartUseCase: GetCartUseCase,
-    private val addCartUseCase: AddCartUseCase
+    private val addCartUseCase: AddCartUseCase,
 ) : ViewModel() {
 
-    private val _cartItems = mutableStateListOf<UserModel.UserCart>()
-    val cartItems: SnapshotStateList<UserModel.UserCart> get() = _cartItems
+    private val _viewState = MutableStateFlow(CartState())
+    val viewState: StateFlow<CartState> = _viewState
 
-    fun loadCart(userId: String) {
+    fun loadCart(productIds: List<String>?,cartId: String) {
         viewModelScope.launch {
+            if (productIds.isNullOrEmpty()) {
+
+            }else {
+                val result = getCartUseCase.invoke()
+            }
             val result = getCartUseCase.invoke(userId = userId)
-            _cartItems.clear()
             when(result){
-                is Resource.Data<*> -> {}
+                is Resource.Data<*> -> {
+                    val data = result as cartEntity
+                }
                 is Resource.Error -> {}
             }
         }
     }
 
-    fun addItem(item: UserModel.UserCart) {
+   /* fun addItem(item: UserModel.UserCart) {
         val existing = _cartItems.find { it.itemId == item.itemId }
         if (existing != null) {
             val updated = existing.copy(itemQun = existing.itemQun + 1)
@@ -87,5 +93,5 @@ class CartViewModel @Inject constructor(
         viewModelScope.launch {
             addCartUseCase.invoke(_cartItems)
         }
-    }
+    }*/
 }

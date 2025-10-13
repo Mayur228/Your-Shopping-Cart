@@ -16,16 +16,12 @@ class YourShoppingCartApp: Application() {
     @Inject
     lateinit var apiDomains: ApiDomains
 
-//    @Inject
-//    lateinit var db: FirebaseFirestore
-
     @Inject
     lateinit var documentApi: DocumentApiFirebaseImpl
 
     override fun onCreate() {
         super.onCreate()
         FirebaseApp.initializeApp(this)
-//        db = Firebase.firestore
         initCore()
     }
 

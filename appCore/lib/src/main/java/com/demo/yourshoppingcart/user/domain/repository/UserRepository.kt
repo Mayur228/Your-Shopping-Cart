@@ -7,5 +7,7 @@ import com.demo.yourshoppingcart.user.domain.entity.userResponseEntity
 
 interface UserRepository {
     suspend fun addCart(entity: List<UserModel.UserCart>): Resource<Unit>
-    suspend fun getCart(userId: String): Resource<cartEntity>
+    suspend fun getCart(cartId: String): Resource<cartEntity>
+    suspend fun getUser(): Resource<UserModel.UserResponse>
+    suspend fun addUser(mobile: String?): Resource<String>
 }

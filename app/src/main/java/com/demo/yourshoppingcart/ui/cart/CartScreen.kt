@@ -34,18 +34,21 @@ import com.demo.yourshoppingcart.user.domain.entity.cartEntity
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CartScreen(
-    products: List<cartEntity>?,
-    userId: String,
+    productIds: List<String>?,
     onBackClick: () -> Unit,
+    cartId: String
 ) {
     val cartViewModel: CartViewModel = hiltViewModel()
 
     LaunchedEffect(Unit) {
-        cartViewModel.loadCart(userId)
+        cartViewModel.loadCart(
+            productIds = productIds,
+            cartId = cartId
+        )
     }
-
-    val cartItems by remember { derivedStateOf { cartViewModel.cartItems } }
-    val totalPrice by remember { derivedStateOf { cartViewModel.getTotalPrice() } }
+    /*
+        val cartItems by remember { derivedStateOf { cartViewModel.cartItems } }
+        val totalPrice by remember { derivedStateOf { cartViewModel.getTotalPrice() } }*/
 
     Scaffold(
         topBar = {
@@ -59,7 +62,7 @@ fun CartScreen(
             )
         },
         bottomBar = {
-            if (cartItems.isNotEmpty()) {
+            /*if (cartItems.isNotEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -67,17 +70,17 @@ fun CartScreen(
                         .padding(16.dp)
                 ) {
                     Button(
-                        onClick = { /* Navigate to Checkout */ },
+                        onClick = { *//* Navigate to Checkout *//* },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(50)
                     ) {
                         Text("Checkout (₹$totalPrice)")
                     }
                 }
-            }
+            }*/
         }
     ) { innerPadding ->
-        if (cartItems.isEmpty()) {
+        /*if (cartItems.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -98,6 +101,6 @@ fun CartScreen(
                     //cart item view
                 }
             }
-        }
+        }*/
     }
 }

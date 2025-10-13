@@ -9,4 +9,5 @@ object NavRoutes {
 
 
     fun productDetails(itemId: String) = "$PRODUCT_DETAILS/$itemId"
+    fun cart(userId: String?) = "$CART/$userId"
 }

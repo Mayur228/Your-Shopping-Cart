@@ -1,7 +1,6 @@
 package com.demo.yourshoppingcart.user.data.model
 
 abstract class UserModel {
-
     data class UserResponse(
         val userId: String,
         val userNum: String,
@@ -22,5 +21,5 @@ abstract class UserModel {
 
 enum class USERTYPE {
     GUEST,
-    LOGGED
+    LOGGED,
 }

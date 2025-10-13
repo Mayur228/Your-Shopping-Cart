@@ -11,13 +11,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,18 +40,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.demo.yourshoppingcart.common.QuantityView
+import com.demo.yourshoppingcart.common.QuantityViewModel
 import com.demo.yourshoppingcart.ui.product_details.component.AddToCartButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductDetailsScreen(
     itemId: String,
-    onBackClick: () -> Boolean
+    onBackClick: () -> Boolean,
+    quantityViewModel: QuantityViewModel
 ) {
     val viewModel = hiltViewModel<ProductDetailsViewModel>()
     val view by viewModel.viewState.collectAsState()
@@ -58,9 +69,9 @@ fun ProductDetailsScreen(
             TopAppBar(
                 title = { Text(text = "Product Details") },
                 navigationIcon = {
-                    IconButton(onClick = { onBackClick }) {
+                    IconButton(onClick = { onBackClick() }) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"
                         )
                     }
@@ -73,6 +84,60 @@ fun ProductDetailsScreen(
             )
         },
         bottomBar = {
+            val productId = view.item?.itemId ?: return@Scaffold
+            QuantityView(productId = productId,
+                viewModel = quantityViewModel
+            ) {quantity, onIncrease, onDecrease ->
+                if (quantity == 0) {
+                    Button(
+                        onClick = { onIncrease() },
+                        shape = RoundedCornerShape(50),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                    ) {
+                        Text(text = "Add to Cart", style = MaterialTheme.typography.bodyLarge)
+                    }
+                } else {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .clip(RoundedCornerShape(50))
+                            .background(MaterialTheme.colorScheme.primary)
+                            .padding(horizontal = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        IconButton(onClick = { onDecrease() }) {
+                            Icon(
+                                imageVector = Icons.Default.Remove,
+                                contentDescription = "Decrease",
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+
+                        Text(
+                            text = quantity.toString(),
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier
+                                .padding(horizontal = 8.dp)
+                                .widthIn(min = 24.dp),
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+
+                        IconButton(onClick = { onIncrease() }) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Increase",
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
+                }
+            }
+
             AddToCartButton(
                 quantity = quantity,
                 onAddToCart = { quantity = 1 },

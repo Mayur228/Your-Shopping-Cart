@@ -22,6 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.demo.yourshoppingcart.R
+import com.demo.yourshoppingcart.common.QuantityViewModel
 import com.demo.yourshoppingcart.ui.home.component.CategoryList
 import com.demo.yourshoppingcart.ui.home.component.ItemList
 
@@ -30,8 +31,9 @@ import com.demo.yourshoppingcart.ui.home.component.ItemList
 fun HomeScreen(
     isDarkTheme: Boolean,
     onThemeToggle: (isDark: Boolean) -> Unit,
-    onCartClick: () -> Unit,
+    onCartClick: (userId: String?) -> Unit,
     onItemClick: (itemId: String) -> Unit,
+    quantityViewModel: QuantityViewModel
 ) {
     val homeViewModel = hiltViewModel<HomeViewModel>()
     val view by homeViewModel.viewState.collectAsState()
@@ -52,7 +54,9 @@ fun HomeScreen(
                         )
                     }
 
-                    IconButton(onClick = onCartClick) {
+                    IconButton(onClick = {
+                        onCartClick(null)
+                    }) {
                         Icon(
                             imageVector = Icons.Default.ShoppingCart,
                             contentDescription = "Cart"
@@ -95,7 +99,8 @@ fun HomeScreen(
                             onItemSelected = {
                                 //Navigate to Details Screen
                                 onItemClick(it)
-                            }
+                            },
+                            quantityViewModel = quantityViewModel
                         )
                     }
                 }
