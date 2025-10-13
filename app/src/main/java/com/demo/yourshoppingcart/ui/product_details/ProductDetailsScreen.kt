@@ -1,6 +1,5 @@
 package com.demo.yourshoppingcart.ui.product_details
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,11 +15,9 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,6 +29,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -39,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.demo.yourshoppingcart.ui.product_details.component.AddToCartButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,14 +51,14 @@ fun ProductDetailsScreen(
     val view by viewModel.viewState.collectAsState()
     viewModel.getItemDetails(itemId = itemId)
     val pagerState = rememberPagerState(pageCount = { view.item?.itemImages?.size ?: 0 })
-
+    var quantity by remember { mutableIntStateOf(0) }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(text = "Product Details") },
                 navigationIcon = {
-                    IconButton(onClick = {onBackClick}) {
+                    IconButton(onClick = { onBackClick }) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Back"
@@ -72,22 +73,12 @@ fun ProductDetailsScreen(
             )
         },
         bottomBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Button(
-                    onClick = { },
-                    shape = RoundedCornerShape(50),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                ) {
-                    Text(text = "Add to Cart", style = MaterialTheme.typography.bodyLarge)
-                }
-            }
+            AddToCartButton(
+                quantity = quantity,
+                onAddToCart = { quantity = 1 },
+                onIncrease = { quantity++ },
+                onDecrease = { if (quantity > 0) quantity-- }
+            )
         }
     ) { innerPadding ->
         when {
@@ -114,7 +105,6 @@ fun ProductDetailsScreen(
                                 .fillMaxWidth()
                                 .height(300.dp)
                         ) { page ->
-                            Log.e("CHECK",view.item?.itemImages.toString())
                             AsyncImage(
                                 model = view.item?.itemImages?.get(page),
                                 contentDescription = null,

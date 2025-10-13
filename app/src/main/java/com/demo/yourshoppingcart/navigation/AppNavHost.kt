@@ -6,6 +6,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.demo.yourshoppingcart.ui.cart.CartScreen
 import com.demo.yourshoppingcart.ui.home.HomeScreen
 import com.demo.yourshoppingcart.ui.product_details.ProductDetailsScreen
 
@@ -14,7 +15,6 @@ fun AppNavHost(
     navController: NavHostController,
     isDarkTheme: Boolean,
     onThemeToggle: (Boolean) -> Unit,
-    onCartClick: () -> Unit
 ) {
     NavHost(
         navController = navController,
@@ -24,7 +24,9 @@ fun AppNavHost(
             HomeScreen(
                 isDarkTheme = isDarkTheme,
                 onThemeToggle = onThemeToggle,
-                onCartClick = onCartClick,
+                onCartClick = {
+                    navController.navigate(NavRoutes.CART)
+                },
                 onItemClick = { itemId ->
                     navController.navigate(NavRoutes.productDetails(itemId))
                 }
@@ -38,6 +40,15 @@ fun AppNavHost(
             val itemId = backStackEntry.arguments?.getString("itemId") ?: ""
             ProductDetailsScreen(
                 itemId = itemId,
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = "${NavRoutes.CART}}") {
+            CartScreen(
+                userId = "",
+                products = emptyList(),
                 onBackClick = { navController.popBackStack() }
             )
         }

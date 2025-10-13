@@ -13,6 +13,7 @@ import androidx.navigation.compose.rememberNavController
 import com.demo.yourshoppingcart.common.StorageKeys
 import com.demo.yourshoppingcart.framework.storage.StorageProviderImpl
 import com.demo.yourshoppingcart.navigation.AppNavHost
+import com.demo.yourshoppingcart.navigation.NavRoutes.CART
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -35,9 +36,6 @@ class MainActivity : ComponentActivity() {
                     onThemeToggle = {
                         storageProvider.putBoolean(StorageKeys.APP_THEME, it)
                         viewModel.updateViewTheme(it)
-                    },
-                    onCartClick = {
-                        // Navigate to Cart Screen
                     }
                 )
             }
