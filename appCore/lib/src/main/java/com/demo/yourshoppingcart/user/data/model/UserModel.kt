@@ -10,6 +10,11 @@ abstract class UserModel {
     )
 
     data class UserCart(
+        val cartId: String,
+        val catItem: List<CartItem>
+    )
+
+    data class CartItem(
         val itemId: String,
         val itemName: String,
         val price: String,

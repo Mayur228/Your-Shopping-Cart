@@ -1,5 +1,7 @@
 package com.demo.yourshoppingcart.di
 
+import android.app.Activity
+import android.content.Context
 import com.demo.yourshoppingcart.framework.firebase.DocumentApiFirebaseImpl
 import com.demo.yourshoppingcart.common.network.DocumentApi
 import com.demo.yourshoppingcart.common.network.config.ApiDomains
@@ -12,7 +14,9 @@ import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ActivityContext
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -35,6 +39,15 @@ abstract class AppModule {
         fun provideFirebaseAuth(): FirebaseAuth {
             return Firebase.auth
         }
+
+
+       /* @Provides
+        @Singleton
+        fun provideDocumentApi(
+            firestore: FirebaseFirestore,
+            auth: FirebaseAuth,
+            activityProvider: () -> Activity
+        ): DocumentApi = DocumentApiFirebaseImpl(firestore, auth, activityProvider)*/
     }
 
     @Binds

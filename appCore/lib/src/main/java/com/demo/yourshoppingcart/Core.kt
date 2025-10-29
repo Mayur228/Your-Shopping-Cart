@@ -10,6 +10,9 @@ import com.demo.yourshoppingcart.product_details.domain.usecase.GetProductDetail
 import com.demo.yourshoppingcart.user.domain.usecase.AddCartUseCase
 import com.demo.yourshoppingcart.user.domain.usecase.GetCartUseCase
 import com.demo.yourshoppingcart.user.domain.usecase.GetUserUseCase
+import com.demo.yourshoppingcart.user.domain.usecase.GuestLoginUseCase
+import com.demo.yourshoppingcart.user.domain.usecase.PhoneLoginUseCase
+import com.demo.yourshoppingcart.user.domain.usecase.SendOtpUseCase
 import org.koin.core.context.GlobalContext.get
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
@@ -62,6 +65,20 @@ object Core {
             get() = get().get()
 
         val getUserUseCase: GetUserUseCase
+            get() = get().get()
+
+        val phoneLoginUseCase: PhoneLoginUseCase
+            get() = get().get()
+    }
+
+    object Login {
+        val guestLoginUseCase: GuestLoginUseCase
+            get() = get().get()
+
+        val phoneLoginUseCase: PhoneLoginUseCase
+            get() = get().get()
+
+        val sendOtpUseCase: SendOtpUseCase
             get() = get().get()
     }
 }

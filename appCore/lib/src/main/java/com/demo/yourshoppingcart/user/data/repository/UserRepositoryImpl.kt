@@ -9,8 +9,13 @@ import org.koin.core.annotation.Factory
 
 @Factory
 class UserRepositoryImpl(private val source: UserSource) : UserRepository {
-    override suspend fun addCart(entity: List<UserModel.UserCart>): Resource<Unit> {
-        TODO("Not yet implemented")
+    override suspend fun addCart(cart: UserModel.UserCart): Resource<Unit> {
+        return try {
+            val data = source.addCart(cart = cart)
+            Resource.Data(Unit)
+        }catch (e: Exception) {
+            Resource.Error(e)
+        }
     }
 
     override suspend fun getCart(cartId: String): Resource<cartEntity> {
@@ -29,5 +34,37 @@ class UserRepositoryImpl(private val source: UserSource) : UserRepository {
         } catch (e: Exception) {
             Resource.Error(e)
         }
+    }
+
+    override suspend fun guestLogin(): Resource<String> {
+        return try {
+            val data = source.guestLogin()
+            Resource.Data(data)
+        } catch (e: Exception) {
+            Resource.Error(e)
+        }
+    }
+
+    override suspend fun phoneLogin(
+        oldGuestId: String?,
+        user: UserModel.UserResponse,
+        verificationId: String?,
+        otp: String?
+    ): Resource<String> {
+        return try {
+            val data = source.phoneLogin(
+                oldGuestId = oldGuestId,
+                user = user,
+                verificationId = verificationId,
+                otp = otp
+            )
+            Resource.Data(data)
+        } catch (e: Exception) {
+            Resource.Error(e)
+        }
+    }
+
+    override suspend fun sendOtp(phoneNumber: String): String {
+        return source.sendOtp(phoneNumber)
     }
 }

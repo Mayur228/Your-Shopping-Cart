@@ -23,7 +23,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val viewModel: MainViewModel by viewModels()
         val storageProvider = StorageProviderImpl(context = application.applicationContext)
-        viewModel.getView(storageProvider.getBoolean(StorageKeys.APP_THEME) == true)
+        viewModel.updateTheme(storageProvider.getBoolean(StorageKeys.APP_THEME) == true)
 
         enableEdgeToEdge()
         setContent {
@@ -32,7 +32,7 @@ class MainActivity : ComponentActivity() {
             val view by viewModel.viewState.collectAsState()
 
             if (view.user == null) {
-                viewModel.addUser(true)
+                viewModel.guestLogin()
             }else{
                 YourShoppingCartTheme(darkTheme = isDark) {
                     AppNavHost(
@@ -40,7 +40,7 @@ class MainActivity : ComponentActivity() {
                         isDarkTheme = isDark,
                         onThemeToggle = {
                             storageProvider.putBoolean(StorageKeys.APP_THEME, it)
-                            viewModel.updateViewTheme(it)
+                            viewModel.updateTheme(it)
                         },
                         user = view.user!!,
                     )

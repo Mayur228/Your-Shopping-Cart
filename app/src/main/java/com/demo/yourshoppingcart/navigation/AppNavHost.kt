@@ -32,7 +32,7 @@ fun AppNavHost(
                 isDarkTheme = isDarkTheme,
                 onThemeToggle = onThemeToggle,
                 onCartClick = {
-                    navController.navigate(NavRoutes.cart(userId = it))
+                    navController.navigate(NavRoutes.CART)
                 },
                 onItemClick = { itemId ->
                     navController.navigate(NavRoutes.productDetails(itemId))
@@ -54,11 +54,12 @@ fun AppNavHost(
         }
 
         composable(
-            route = "${NavRoutes.CART}}") {
+            route = NavRoutes.CART
+        ) {
             CartScreen(
-                userId = "",
-                products = emptyList(),
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
+                productIds =quantityViewModel.quantities.keys.toList(),
+                cartId = user.cart?.cartId ?: ""
             )
         }
     }
