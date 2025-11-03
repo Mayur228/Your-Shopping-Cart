@@ -29,6 +29,7 @@ class CartViewModel @Inject constructor(
     private val _viewState = MutableStateFlow(CartState())
     val viewState: StateFlow<CartState> = _viewState
 
+    // Load existing cart
     fun loadCart(
         productIds: List<String>?,
         cartId: String,
@@ -38,80 +39,15 @@ class CartViewModel @Inject constructor(
             _viewState.value = _viewState.value.copy(isLoading = true)
 
             try {
-                // CASE 1: Existing cart + new product IDs => merge
-                if (cartId.isNotEmpty() && !productIds.isNullOrEmpty()) {
-                    when (val existingResult = getCartUseCase.invoke(cartId)) {
-                        is Resource.Data<*> -> {
-                            val existingCart = existingResult.value as CartModel.Cart
-                            val existingItems = existingCart.cartItem.toMutableList()
-
-                            // Fetch product details for new items
-                            when (val fetchedProducts = getProductDetailsUseCase.invoke(productIds)) {
-                                is Resource.Data<*> -> {
-                                    val products = fetchedProducts.value as List<HomeModel.Item>
-
-                                    products.forEach { product ->
-                                        val quantity = productQuantity[product.itemId] ?: 0
-                                        val existingIndex =
-                                            existingItems.indexOfFirst { it.productId == product.itemId }
-
-                                        if (existingIndex >= 0) {
-                                            // Update quantity
-                                            val existing = existingItems[existingIndex]
-                                            existingItems[existingIndex] = existing.copy(
-                                                productQun = existing.productQun + quantity
-                                            )
-                                        } else {
-                                            // Add new item
-                                            existingItems.add(
-                                                CartModel.CartItem(
-                                                    productId = product.itemId,
-                                                    productName = product.itemName,
-                                                    productPrice = product.itemPrice,
-                                                    productQun = quantity,
-                                                    productDes = product.itemDes,
-                                                    productImg = product.itemImg
-                                                )
-                                            )
-                                        }
-                                    }
-
-                                    // Update the cart on Firestore
-                                    updateCart(
-                                        cartId = cartId,
-                                        cart = existingItems
-                                    )
-                                }
-
-                                is Resource.Error -> {
-                                    _viewState.value = _viewState.value.copy(
-                                        isLoading = false,
-                                        errorMessage = fetchedProducts.throwable.message
-                                    )
-                                }
-                            }
-                        }
-
-                        is Resource.Error -> {
-                            _viewState.value = _viewState.value.copy(
-                                isLoading = false,
-                                errorMessage = existingResult.throwable.message
-                            )
-                        }
-                    }
-                }
-
-                // CASE 2: Existing cart but no new product IDs => just load existing data
-                else if (cartId.isNotEmpty() && productIds.isNullOrEmpty()) {
+                if (cartId.isNotEmpty()) {
+                    // Existing cart
                     when (val cartResult = getCartUseCase.invoke(cartId)) {
                         is Resource.Data<*> -> {
                             val cart = cartResult.value as CartModel.Cart
-                            _viewState.value = _viewState.value.copy(
-                                isLoading = false,
-                                cartData = cart
-                            )
+                            _viewState.value = _viewState.value.copy(isLoading = false, cartData = cart)
+                            // Merge new products if any
+                            productIds?.let { updateCartItems(cart.cartId, it, productQuantity) }
                         }
-
                         is Resource.Error -> {
                             _viewState.value = _viewState.value.copy(
                                 isLoading = false,
@@ -119,15 +55,10 @@ class CartViewModel @Inject constructor(
                             )
                         }
                     }
-                }
-
-                // CASE 3: No cart yet => create new one
-                else if (cartId.isEmpty() && !productIds.isNullOrEmpty()) {
+                } else if (!productIds.isNullOrEmpty()) {
+                    // No cart yet → create new cart with these products
                     addProductToCart(productIds, productQuantity)
-                }
-
-                // CASE 4: Nothing to do
-                else {
+                } else {
                     _viewState.value = _viewState.value.copy(isLoading = false)
                 }
             } catch (e: Exception) {
@@ -139,7 +70,8 @@ class CartViewModel @Inject constructor(
         }
     }
 
-    fun addProductToCart(
+    // Add products to a new cart
+    private fun addProductToCart(
         productIds: List<String>,
         productQuantities: Map<String, Int>
     ) {
@@ -147,61 +79,47 @@ class CartViewModel @Inject constructor(
             _viewState.value = _viewState.value.copy(isLoading = true)
 
             try {
-                val currentCart = _viewState.value.cartData
-                val updatedCartItems = currentCart?.cartItem?.toMutableList() ?: mutableListOf()
-
                 val fetchedProducts = getProductDetailsUseCase.invoke(productIds)
 
-                when (fetchedProducts) {
-                    is Resource.Data<*> -> {
-                        val products = fetchedProducts.value as List<HomeModel.Item>
-
-                        products.forEach { product ->
-                            val quantity = productQuantities[product.itemId] ?: 0
-
-                            updatedCartItems.add(
-                                CartModel.CartItem(
-                                productId = product.itemId,
-                                productName = product.itemName,
-                                productPrice = product.itemPrice,
-                                productQun = quantity,
-                                productDes = product.itemDes,
-                                productImg = product.itemImg
-                            )
+                if (fetchedProducts is Resource.Data<*>) {
+                    val products = fetchedProducts.value as List<HomeModel.Item>
+                    val cartItems = products.map { product ->
+                        CartModel.CartItem(
+                            productId = product.itemId,
+                            productName = product.itemName,
+                            productPrice = product.itemPrice,
+                            productQun = productQuantities[product.itemId] ?: 0,
+                            productDes = product.itemDes,
+                            productImg = product.itemImg
                         )
+                    }
+
+                    val newCart = cartEntity(
+                        cartId = UUID.randomUUID().toString(),
+                        cartItem = cartItems
+                    )
+
+                    when (val result = addCartUseCase.invoke(newCart)) {
+                        is Resource.Data<*> -> {
+                            _viewState.value = _viewState.value.copy(
+                                isLoading = false,
+                                cartData = newCart,
+                                errorMessage = null
+                            )
+                        }
+                        is Resource.Error -> {
+                            _viewState.value = _viewState.value.copy(
+                                isLoading = false,
+                                errorMessage = result.throwable.message
+                            )
                         }
                     }
-                    is Resource.Error -> {
-                        _viewState.value = _viewState.value.copy(
-                            isLoading = false,
-                            errorMessage = fetchedProducts.throwable.message
-                        )
-                    }
+                } else if (fetchedProducts is Resource.Error) {
+                    _viewState.value = _viewState.value.copy(
+                        isLoading = false,
+                        errorMessage = fetchedProducts.throwable.message
+                    )
                 }
-
-                val updatedCart = cartEntity(
-                    cartId = UUID.randomUUID().toString(),
-                    cartItem = updatedCartItems
-                )
-
-                Log.e("CHECK",updatedCart.toString())
-
-                when (val result = addCartUseCase.invoke(updatedCart)) {
-                    is Resource.Data<*> -> {
-                        _viewState.value = _viewState.value.copy(
-                            isLoading = false,
-                            cartData = updatedCart,
-                            errorMessage = null
-                        )
-                    }
-                    is Resource.Error -> {
-                        _viewState.value = _viewState.value.copy(
-                            isLoading = false,
-                            errorMessage = result.throwable.message
-                        )
-                    }
-                }
-
             } catch (e: Exception) {
                 _viewState.value = _viewState.value.copy(
                     isLoading = false,
@@ -211,25 +129,18 @@ class CartViewModel @Inject constructor(
         }
     }
 
-    fun updateCart(
-        cartId: String,
-        cart: List<CartModel.CartItem>,
-    ) {
+    // Update the whole cart in Firebase
+    private fun updateCart(cartId: String, cart: List<CartModel.CartItem>) {
         viewModelScope.launch {
             _viewState.value = _viewState.value.copy(isLoading = true)
             val result = updateCartItemUseCase.invoke(cartId = cartId, cart = cart)
             when (result) {
                 is Resource.Data<*> -> {
-                    //val cart = result.value as String
                     _viewState.value = _viewState.value.copy(
                         isLoading = false,
-                        cartData = CartModel.Cart(
-                            cartId = cartId,
-                            cartItem = cart
-                        )
+                        cartData = CartModel.Cart(cartId = cartId, cartItem = cart)
                     )
                 }
-
                 is Resource.Error -> {
                     _viewState.value = _viewState.value.copy(
                         isLoading = false,
@@ -240,25 +151,73 @@ class CartViewModel @Inject constructor(
         }
     }
 
+    // Update single product quantity in cart (handles add/remove)
+    fun updateCartQuantity(cartId: String?, productId: String, newQuantity: Int) {
+        viewModelScope.launch {
+            val currentCart = _viewState.value.cartData
+            val updatedItems = currentCart?.cartItem?.toMutableList() ?: mutableListOf()
+
+            val index = updatedItems.indexOfFirst { it.productId == productId }
+
+            if (index != -1) {
+                if (newQuantity > 0) {
+                    updatedItems[index] = updatedItems[index].copy(productQun = newQuantity)
+                } else {
+                    updatedItems.removeAt(index)
+                }
+            } else if (newQuantity > 0) {
+                // If cart exists, add new item
+                val product = getProductDetailsUseCase.invoke(listOf(productId))
+                if (product is Resource.Data<*>) {
+                    val item = (product.value as List<HomeModel.Item>)[0]
+                    updatedItems.add(
+                        CartModel.CartItem(
+                            productId = item.itemId,
+                            productName = item.itemName,
+                            productPrice = item.itemPrice,
+                            productQun = newQuantity,
+                            productDes = item.itemDes,
+                            productImg = item.itemImg
+                        )
+                    )
+                }
+            }
+
+            if (!cartId.isNullOrEmpty()) {
+                // Update existing cart
+                _viewState.value = _viewState.value.copy(
+                    cartData = currentCart?.copy(cartItem = updatedItems)
+                        ?: CartModel.Cart(cartId = cartId, cartItem = updatedItems)
+                )
+                updateCart(cartId, updatedItems)
+            } else if (updatedItems.isNotEmpty()) {
+                // No cart yet → create new
+                val newCartId = UUID.randomUUID().toString()
+                val newCart = CartModel.Cart(cartId = newCartId, cartItem = updatedItems)
+                _viewState.value = _viewState.value.copy(cartData = newCart)
+                addCartUseCase.invoke(newCart)
+            }
+        }
+    }
+
+    // Checkout (clear cart)
     fun checkout(cartId: String) {
         viewModelScope.launch {
             _viewState.value = _viewState.value.copy(isLoading = true)
 
             val emptyCart = cartEntity(
-                cartId = cartId,
+                cartId = "",
                 cartItem = emptyList()
             )
 
-            when (val result = addCartUseCase(emptyCart)) {
+            when (val result = addCartUseCase.invoke(emptyCart)) {
                 is Resource.Data<*> -> {
-                    //quantityViewModel.reset()
                     _viewState.value = _viewState.value.copy(
                         isLoading = false,
                         cartData = emptyCart,
                         errorMessage = null
                     )
                 }
-
                 is Resource.Error -> {
                     _viewState.value = _viewState.value.copy(
                         isLoading = false,
@@ -266,6 +225,41 @@ class CartViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+
+    // Merge new products into existing cart
+    private suspend fun updateCartItems(
+        cartId: String,
+        productIds: List<String>,
+        productQuantity: Map<String, Int>
+    ) {
+        val currentCart = _viewState.value.cartData
+        val updatedItems = currentCart?.cartItem?.toMutableList() ?: mutableListOf()
+
+        val fetchedProducts = getProductDetailsUseCase.invoke(productIds)
+
+        if (fetchedProducts is Resource.Data<*>) {
+            val products = fetchedProducts.value as List<HomeModel.Item>
+            products.forEach { product ->
+                val quantity = productQuantity[product.itemId] ?: 0
+                val index = updatedItems.indexOfFirst { it.productId == product.itemId }
+                if (index >= 0) {
+                    updatedItems[index] = updatedItems[index].copy(productQun = quantity)
+                } else {
+                    updatedItems.add(
+                        CartModel.CartItem(
+                            productId = product.itemId,
+                            productName = product.itemName,
+                            productPrice = product.itemPrice,
+                            productQun = quantity,
+                            productDes = product.itemDes,
+                            productImg = product.itemImg
+                        )
+                    )
+                }
+            }
+            updateCart(cartId, updatedItems)
         }
     }
 }

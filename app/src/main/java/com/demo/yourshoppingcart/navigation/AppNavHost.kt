@@ -10,6 +10,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.demo.yourshoppingcart.common.QuantityViewModel
 import com.demo.yourshoppingcart.ui.cart.CartScreen
+import com.demo.yourshoppingcart.ui.cart.CartViewModel
 import com.demo.yourshoppingcart.ui.home.HomeScreen
 import com.demo.yourshoppingcart.ui.product_details.ProductDetailsScreen
 import com.demo.yourshoppingcart.user.data.model.UserModel
@@ -22,6 +23,7 @@ fun AppNavHost(
     user: UserModel.UserResponse
 ) {
     val quantityViewModel: QuantityViewModel = hiltViewModel()
+    val cartViewModel: CartViewModel = hiltViewModel()
 
     NavHost(
         navController = navController,
@@ -38,7 +40,8 @@ fun AppNavHost(
                 onItemClick = { itemId ->
                     navController.navigate(NavRoutes.productDetails(itemId))
                 },
-                quantityViewModel = quantityViewModel
+                quantityViewModel = quantityViewModel,
+                cartViewModel = cartViewModel
             )
         }
 
@@ -50,7 +53,8 @@ fun AppNavHost(
             ProductDetailsScreen(
                 itemId = itemId,
                 onBackClick = { navController.popBackStack() },
-                quantityViewModel = quantityViewModel
+                quantityViewModel = quantityViewModel,
+                cartViewModel = cartViewModel
             )
         }
 
@@ -65,7 +69,8 @@ fun AppNavHost(
                 onBackClick = { navController.popBackStack() },
                 productIds = quantityViewModel.quantities.keys.toList(),
                 cartId = cartId,
-                quantityViewModel = quantityViewModel
+                quantityViewModel = quantityViewModel,
+                cartViewModel = cartViewModel
             )
         }
     }

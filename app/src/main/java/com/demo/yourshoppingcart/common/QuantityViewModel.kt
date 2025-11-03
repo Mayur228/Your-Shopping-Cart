@@ -3,8 +3,8 @@ package com.demo.yourshoppingcart.common
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
+
 @HiltViewModel
 class QuantityViewModel @Inject constructor() : ViewModel() {
     private val _quantities = mutableStateMapOf<String, Int>()
@@ -29,6 +29,11 @@ class QuantityViewModel @Inject constructor() : ViewModel() {
     fun setQuantity(productId: String, quantity: Int) {
         if (quantity <= 0) _quantities.remove(productId)
         else _quantities[productId] = quantity
+    }
+
+    fun setQuantities(newQuantities: Map<String, Int>) {
+        _quantities.clear()
+        _quantities.putAll(newQuantities)
     }
 
     fun reset() {

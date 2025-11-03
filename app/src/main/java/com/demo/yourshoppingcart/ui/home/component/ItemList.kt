@@ -36,12 +36,14 @@ import coil.compose.AsyncImage
 import com.demo.yourshoppingcart.common.QuantityView
 import com.demo.yourshoppingcart.common.QuantityViewModel
 import com.demo.yourshoppingcart.home.domain.entity.HomeEntity
+import com.demo.yourshoppingcart.ui.cart.CartViewModel
 
 @Composable
 fun ItemList(
     items: List<HomeEntity.ItemEntity>,
     onItemSelected: (itemId: String) -> Unit,
-    quantityViewModel: QuantityViewModel
+    quantityViewModel: QuantityViewModel,
+    cartViewModel: CartViewModel
 ) {
     LazyColumn(
         modifier = Modifier.padding(8.dp),
@@ -95,13 +97,23 @@ fun ItemList(
 
                     Spacer(modifier = Modifier.width(8.dp))
 
+                    val cartId = cartViewModel.viewState.value.cartData?.cartId ?: ""
+
                     QuantityView(
                         productId = item.id,
                         viewModel = quantityViewModel
                     ) { quantity, onIncrease, onDecrease ->
                         if (quantity == 0) {
                             Button(
-                                onClick = { onIncrease() },
+                                onClick = {
+                                    onIncrease()
+                                    val newQuantity = quantityViewModel.getQuantity(item.id)
+                                    cartViewModel.updateCartQuantity(
+                                        cartId,
+                                        productId = item.id,
+                                        newQuantity
+                                    )
+                                },
                                 shape = RoundedCornerShape(50),
                                 modifier = Modifier.height(40.dp)
                             ) {
@@ -112,7 +124,15 @@ fun ItemList(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 IconButton(
-                                    onClick = { onDecrease() }
+                                    onClick = {
+                                        onDecrease()
+                                        val newQuantity = quantityViewModel.getQuantity(item.id)
+                                        cartViewModel.updateCartQuantity(
+                                            cartId,
+                                            productId = item.id,
+                                            newQuantity
+                                        )
+                                    },
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Remove,
@@ -127,7 +147,15 @@ fun ItemList(
                                 )
 
                                 IconButton(
-                                    onClick = { onIncrease() }
+                                    onClick = {
+                                        onIncrease()
+                                        val newQuantity = quantityViewModel.getQuantity(item.id)
+                                        cartViewModel.updateCartQuantity(
+                                            cartId,
+                                            item.id,
+                                            newQuantity
+                                        )
+                                    }
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Add,

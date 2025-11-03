@@ -21,9 +21,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -49,6 +49,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.demo.yourshoppingcart.common.QuantityView
 import com.demo.yourshoppingcart.common.QuantityViewModel
+import com.demo.yourshoppingcart.ui.cart.CartViewModel
 import com.demo.yourshoppingcart.ui.product_details.component.AddToCartButton
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,7 +57,8 @@ import com.demo.yourshoppingcart.ui.product_details.component.AddToCartButton
 fun ProductDetailsScreen(
     itemId: String,
     onBackClick: () -> Boolean,
-    quantityViewModel: QuantityViewModel
+    quantityViewModel: QuantityViewModel,
+    cartViewModel: CartViewModel
 ) {
     val viewModel = hiltViewModel<ProductDetailsViewModel>()
     val view by viewModel.viewState.collectAsState()
@@ -64,91 +66,112 @@ fun ProductDetailsScreen(
     val pagerState = rememberPagerState(pageCount = { view.item?.itemImages?.size ?: 0 })
     var quantity by remember { mutableIntStateOf(0) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(text = "Product Details") },
-                navigationIcon = {
-                    IconButton(onClick = { onBackClick() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
-                )
+    Scaffold(topBar = {
+        TopAppBar(
+            title = { Text(text = "Product Details") }, navigationIcon = {
+                IconButton(onClick = { onBackClick() }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back"
+                    )
+                }
+            }, colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.surface,
+                titleContentColor = MaterialTheme.colorScheme.onSurface,
+                navigationIconContentColor = MaterialTheme.colorScheme.onSurface
             )
-        },
-        bottomBar = {
-            val productId = view.item?.itemId ?: return@Scaffold
-            QuantityView(productId = productId,
-                viewModel = quantityViewModel
-            ) {quantity, onIncrease, onDecrease ->
-                if (quantity == 0) {
-                    Button(
-                        onClick = { onIncrease() },
-                        shape = RoundedCornerShape(50),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp)
-                    ) {
-                        Text(text = "Add to Cart", style = MaterialTheme.typography.bodyLarge)
-                    }
-                } else {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp)
-                            .clip(RoundedCornerShape(50))
-                            .background(MaterialTheme.colorScheme.primary)
-                            .padding(horizontal = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        IconButton(onClick = { onDecrease() }) {
-                            Icon(
-                                imageVector = Icons.Default.Remove,
-                                contentDescription = "Decrease",
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
-
-                        Text(
-                            text = quantity.toString(),
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier
-                                .padding(horizontal = 8.dp)
-                                .widthIn(min = 24.dp),
-                            textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+        )
+    }, bottomBar = {
+        val productId = view.item?.itemId ?: return@Scaffold
+        val cartId = cartViewModel.viewState.value.cartData?.cartId ?: ""
+        QuantityView(
+            productId = productId, viewModel = quantityViewModel
+        ) { quantity, onIncrease, onDecrease ->
+            if (quantity == 0) {
+                Button(
+                    onClick = {
+                        onIncrease()
+                        val newQuantity = quantityViewModel.getQuantity(productId)
+                        cartViewModel.updateCartQuantity(
+                            cartId, productId, newQuantity
                         )
+                    },
+                    shape = RoundedCornerShape(50),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                ) {
+                    Text(text = "Add to Cart", style = MaterialTheme.typography.bodyLarge)
+                }
+            } else {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .clip(RoundedCornerShape(50))
+                        .background(MaterialTheme.colorScheme.primary)
+                        .padding(horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    IconButton(onClick = {
+                        onDecrease()
+                        val newQuantity = quantityViewModel.getQuantity(productId)
+                        cartViewModel.updateCartQuantity(
+                            cartId, productId, newQuantity
+                        )
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Remove,
+                            contentDescription = "Decrease",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
 
-                        IconButton(onClick = { onIncrease() }) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = "Increase",
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
+                    Text(
+                        text = quantity.toString(),
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier
+                            .padding(horizontal = 8.dp)
+                            .widthIn(min = 24.dp),
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+
+                    IconButton(onClick = {
+                        onIncrease()
+                        val newQuantity = quantityViewModel.getQuantity(productId)
+                        cartViewModel.updateCartQuantity(
+                            cartId, productId, newQuantity
+                        )
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Increase",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
                     }
                 }
             }
-
-            AddToCartButton(
-                quantity = quantity,
-                onAddToCart = { quantity = 1 },
-                onIncrease = { quantity++ },
-                onDecrease = { if (quantity > 0) quantity-- }
-            )
         }
-    ) { innerPadding ->
+
+        AddToCartButton(
+            quantity = quantity,
+            onAddToCart = { quantity = 1 },
+            onIncrease = { quantity++ },
+            onDecrease = { if (quantity > 0) quantity-- },
+        )
+    }) { innerPadding ->
         when {
             view.isLoading -> {
-                //loading view
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
             }
 
             view.errorMessage?.isNotEmpty() == true -> {
@@ -165,8 +188,7 @@ fun ProductDetailsScreen(
                     // Carousel Section
                     Box(modifier = Modifier.fillMaxWidth()) {
                         HorizontalPager(
-                            state = pagerState,
-                            modifier = Modifier
+                            state = pagerState, modifier = Modifier
                                 .fillMaxWidth()
                                 .height(300.dp)
                         ) { page ->
@@ -192,10 +214,8 @@ fun ProductDetailsScreen(
                                         .padding(2.dp)
                                         .size(if (isSelected) 8.dp else 6.dp)
                                         .background(
-                                            color = if (isSelected)
-                                                MaterialTheme.colorScheme.primary
-                                            else
-                                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                                            color = if (isSelected) MaterialTheme.colorScheme.primary
+                                            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                                             shape = CircleShape
                                         )
                                 )
