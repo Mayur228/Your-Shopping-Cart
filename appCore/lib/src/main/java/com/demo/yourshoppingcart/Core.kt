@@ -7,12 +7,15 @@ import com.demo.yourshoppingcart.home.domain.usecase.GetAllItemUseCase
 import com.demo.yourshoppingcart.home.domain.usecase.GetCategoryUseCase
 import com.demo.yourshoppingcart.home.domain.usecase.GetSelectedCategoryItemUseCase
 import com.demo.yourshoppingcart.product_details.domain.usecase.GetProductDetailsUseCase
-import com.demo.yourshoppingcart.user.domain.usecase.AddCartUseCase
-import com.demo.yourshoppingcart.user.domain.usecase.GetCartUseCase
+import com.demo.yourshoppingcart.cart.domain.usecase.AddCartUseCase
+import com.demo.yourshoppingcart.cart.domain.usecase.GetCartUseCase
+import com.demo.yourshoppingcart.cart.domain.usecase.GetProductsUseCase
 import com.demo.yourshoppingcart.user.domain.usecase.GetUserUseCase
 import com.demo.yourshoppingcart.user.domain.usecase.GuestLoginUseCase
 import com.demo.yourshoppingcart.user.domain.usecase.PhoneLoginUseCase
 import com.demo.yourshoppingcart.user.domain.usecase.SendOtpUseCase
+import com.demo.yourshoppingcart.cart.domain.usecase.UpdateCartUseCase
+import com.demo.yourshoppingcart.home.domain.usecase.GetQuantityUseCase
 import org.koin.core.context.GlobalContext.get
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
@@ -50,6 +53,9 @@ object Core {
 
         val getSelectedCategoryItemUseCase: GetSelectedCategoryItemUseCase
             get() = get().get()
+
+        val getUserUseCase: GetQuantityUseCase
+            get() = get().get()
     }
 
     object ProductDetails {
@@ -58,16 +64,7 @@ object Core {
     }
 
     object User {
-        val getCartUseCase: GetCartUseCase
-            get() = get().get()
-
-        val addCartUseCase: AddCartUseCase
-            get() = get().get()
-
         val getUserUseCase: GetUserUseCase
-            get() = get().get()
-
-        val phoneLoginUseCase: PhoneLoginUseCase
             get() = get().get()
     }
 
@@ -80,5 +77,20 @@ object Core {
 
         val sendOtpUseCase: SendOtpUseCase
             get() = get().get()
+    }
+
+    object Cart {
+        val getCartUseCase: GetCartUseCase
+            get() = get().get()
+
+        val addCartUseCase: AddCartUseCase
+            get() = get().get()
+
+        val getProductsUseCase: GetProductsUseCase
+            get() = get().get()
+
+        val updateCartUseCase: UpdateCartUseCase
+            get() = get().get()
+
     }
 }

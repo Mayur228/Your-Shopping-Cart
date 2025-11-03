@@ -1,15 +1,10 @@
 package com.demo.yourshoppingcart.ui.cart.di
 
 import com.demo.yourshoppingcart.Core
-import com.demo.yourshoppingcart.common.QuantityViewModel
-import com.demo.yourshoppingcart.home.data.repository.HomeRepositoryImpl
-import com.demo.yourshoppingcart.home.domain.repository.HomeRepository
-import com.demo.yourshoppingcart.home.domain.usecase.GetAllItemUseCase
-import com.demo.yourshoppingcart.home.domain.usecase.GetCategoryUseCase
-import com.demo.yourshoppingcart.home.domain.usecase.GetSelectedCategoryItemUseCase
-import com.demo.yourshoppingcart.user.domain.entity.cartEntity
-import com.demo.yourshoppingcart.user.domain.usecase.AddCartUseCase
-import com.demo.yourshoppingcart.user.domain.usecase.GetCartUseCase
+import com.demo.yourshoppingcart.cart.domain.usecase.AddCartUseCase
+import com.demo.yourshoppingcart.cart.domain.usecase.GetCartUseCase
+import com.demo.yourshoppingcart.cart.domain.usecase.GetProductsUseCase
+import com.demo.yourshoppingcart.cart.domain.usecase.UpdateCartUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,16 +16,23 @@ import dagger.hilt.android.components.ViewModelComponent
 class CartViewModelModule {
     @Provides
     fun getCartUseCase(): GetCartUseCase {
-        return Core.User.getCartUseCase
+        return Core.Cart.getCartUseCase
     }
-
     @Provides
     fun addCartUseCase(): AddCartUseCase {
-        return Core.User.addCartUseCase
+        return Core.Cart.addCartUseCase
+    }
+    @Provides
+    fun getProductDetailsUseCase(): GetProductsUseCase {
+        return Core.Cart.getProductsUseCase
     }
 
     @Provides
+    fun updateCartUseCase(): UpdateCartUseCase {
+        return Core.Cart.updateCartUseCase
+    }
+    /*@Provides
     fun provideQuantityViewModel(): QuantityViewModel {
         return QuantityViewModel()
-    }
+    }*/
 }

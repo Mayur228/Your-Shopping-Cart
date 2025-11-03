@@ -14,6 +14,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -31,12 +32,16 @@ import com.demo.yourshoppingcart.ui.home.component.ItemList
 fun HomeScreen(
     isDarkTheme: Boolean,
     onThemeToggle: (isDark: Boolean) -> Unit,
-    onCartClick: (userId: String?) -> Unit,
+    onCartClick: (cartId: String?) -> Unit,
     onItemClick: (itemId: String) -> Unit,
     quantityViewModel: QuantityViewModel
 ) {
     val homeViewModel = hiltViewModel<HomeViewModel>()
     val view by homeViewModel.viewState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        homeViewModel.getItemQuantity()
+    }
 
     Scaffold(
         topBar = {
@@ -55,7 +60,7 @@ fun HomeScreen(
                     }
 
                     IconButton(onClick = {
-                        onCartClick(null)
+                        onCartClick(view.cartId)
                     }) {
                         Icon(
                             imageVector = Icons.Default.ShoppingCart,
@@ -97,7 +102,6 @@ fun HomeScreen(
                         ItemList(
                             items = view.items,
                             onItemSelected = {
-                                //Navigate to Details Screen
                                 onItemClick(it)
                             },
                             quantityViewModel = quantityViewModel

@@ -1,12 +1,16 @@
 package com.demo.yourshoppingcart.ui.home
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.demo.yourshoppingcart.Resource
 import com.demo.yourshoppingcart.home.domain.entity.HomeEntity
 import com.demo.yourshoppingcart.home.domain.usecase.GetAllItemUseCase
 import com.demo.yourshoppingcart.home.domain.usecase.GetCategoryUseCase
+import com.demo.yourshoppingcart.home.domain.usecase.GetQuantityUseCase
 import com.demo.yourshoppingcart.home.domain.usecase.GetSelectedCategoryItemUseCase
+import com.demo.yourshoppingcart.user.data.model.UserModel
+import com.demo.yourshoppingcart.user.domain.usecase.GetUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +21,8 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     val getCategoryUseCase: GetCategoryUseCase,
     val getAllItemUseCase: GetAllItemUseCase,
-    val getSelectedCategoryItemUseCase: GetSelectedCategoryItemUseCase
+    val getSelectedCategoryItemUseCase: GetSelectedCategoryItemUseCase,
+    val getUser: GetQuantityUseCase
 ) : ViewModel() {
 
     private val _viewState = MutableStateFlow(HomeViewState())
@@ -26,6 +31,34 @@ class HomeViewModel @Inject constructor(
     init {
         getAllCategory()
         getAllItem()
+        getItemQuantity()
+    }
+
+     fun getItemQuantity() {
+        viewModelScope.launch {
+            _viewState.value = _viewState.value.copy(isLoading = true)
+            when (val result = getUser.invoke()) {
+                is Resource.Data<UserModel.UserResponse> -> {
+                    val user = result.value
+                    val itemQuantity = user.cart?.cartItem
+                        ?.associate { it.productId to it.productQun } ?: emptyMap()
+
+                    _viewState.value =
+                        _viewState.value.copy(isLoading = false, itemsQuantity = itemQuantity, cartId = user.cart?.cartId ?: "")
+
+                    Log.e("CHECK",user.toString())
+                }
+
+                is Resource.Error -> {
+                    _viewState.value = _viewState.value.copy(
+                        isLoading = false,
+                        errorMessage = result.throwable.message
+                    )
+                    Log.e("CHECK",result.throwable.message.toString())
+
+                }
+            }
+        }
     }
 
     fun getAllCategory() {

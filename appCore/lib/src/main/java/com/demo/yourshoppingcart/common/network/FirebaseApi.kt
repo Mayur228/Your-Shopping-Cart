@@ -1,5 +1,6 @@
 package com.demo.yourshoppingcart.common.network
 
+import com.demo.yourshoppingcart.cart.data.model.CartModel
 import com.demo.yourshoppingcart.home.data.model.HomeModel
 import com.demo.yourshoppingcart.product_details.data.model.ProductDetailsModel
 import com.demo.yourshoppingcart.user.data.model.UserModel
@@ -10,8 +11,10 @@ interface DocumentApi {
     suspend fun fetchAllItems(): HomeModel.CategoryItemResponse
     suspend fun fetchSelectedCatItem(cat: String): HomeModel.CategoryItemResponse
     suspend fun fetchProductDetails(itemId: String): ProductDetailsModel.DetailModel
-    suspend fun addProductToCart(cart: UserModel.UserCart)
-    suspend fun fetchCart(cartId: String): UserModel.UserCart
+    suspend fun fetchProducts(productIds: List<String>): List<HomeModel.Item>
+    suspend fun addProductToCart(cart: CartModel.Cart)
+    suspend fun fetchCart(cartId: String): CartModel.Cart
+    suspend fun updateCartItem(cartId: String,cart: List<CartModel.CartItem>)
     suspend fun clearCart()
     suspend fun fetchUser(): UserModel.UserResponse
     suspend fun guestLogin(): String

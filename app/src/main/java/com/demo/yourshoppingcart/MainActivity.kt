@@ -5,7 +5,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import com.demo.yourshoppingcart.ui.home.HomeScreen
 import com.demo.yourshoppingcart.ui.theme.YourShoppingCartTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -27,14 +29,22 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
         setContent {
-            val isDark = viewModel.viewState.collectAsState().value.isDark
-            val navController = rememberNavController()
             val view by viewModel.viewState.collectAsState()
+            val navController = rememberNavController()
+            val storageProvider = StorageProviderImpl(context = application.applicationContext)
 
-            if (view.user == null) {
-                viewModel.guestLogin()
-            }else{
-                YourShoppingCartTheme(darkTheme = isDark) {
+            val isDark = view.isDark
+
+            YourShoppingCartTheme(darkTheme = isDark) {
+                if (view.user == null && !view.isLoading) {
+                    LaunchedEffect(Unit) {
+                        viewModel.guestLogin()
+                    }
+                }
+
+                if (view.user == null) {
+                    // wait for get user
+                } else {
                     AppNavHost(
                         navController = navController,
                         isDarkTheme = isDark,
@@ -42,7 +52,7 @@ class MainActivity : ComponentActivity() {
                             storageProvider.putBoolean(StorageKeys.APP_THEME, it)
                             viewModel.updateTheme(it)
                         },
-                        user = view.user!!,
+                        user = view.user!!
                     )
                 }
             }

@@ -1,20 +1,15 @@
 package com.demo.yourshoppingcart.framework.firebase
 
-import android.app.Activity
+import com.demo.yourshoppingcart.cart.data.model.CartModel
 import com.demo.yourshoppingcart.common.network.DocumentApi
 import com.demo.yourshoppingcart.home.data.model.HomeModel
 import com.demo.yourshoppingcart.product_details.data.model.ProductDetailsModel
 import com.demo.yourshoppingcart.user.data.model.USERTYPE
 import com.demo.yourshoppingcart.user.data.model.UserModel
-import com.google.firebase.FirebaseException
 import com.google.firebase.auth.*
 import com.google.firebase.firestore.FirebaseFirestore
-import dagger.hilt.android.qualifiers.ActivityContext
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
-import kotlin.coroutines.resume
 
 class DocumentApiFirebaseImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
@@ -84,29 +79,97 @@ class DocumentApiFirebaseImpl @Inject constructor(
         )
     }
 
-    override suspend fun addProductToCart(cart: UserModel.UserCart) {
+    override suspend fun fetchProducts(productIds: List<String>): List<HomeModel.Item> {
+        val snapshot = firestore.collection("categoryItem")
+            .whereIn("itemId", productIds)
+            .get()
+            .await()
+
+        return snapshot.documents.mapNotNull { doc ->
+            HomeModel.Item(
+                itemId = doc.getString("itemId") ?: "",
+                itemName = doc.getString("itemName") ?: "",
+                itemDes = doc.getString("itemDes") ?: "",
+                itemImg = doc.getString("itemImg") ?: "",
+                itemPrice = doc.getString("itemPrice") ?: "",
+                cat = doc.getString("cat") ?: ""
+            )
+        }
+    }
+
+    override suspend fun addProductToCart(cart: CartModel.Cart) {
         val document = auth.currentUser?.uid ?: return
-        val cartItem = cart.catItem.map {
+
+        val cartItem = cart.cartItem.map {
             hashMapOf(
-                "productId" to it.itemId,
-                "productName" to it.itemName,
-                "productImg" to it.itemImg,
-                "productPrice" to it.price,
-                "productQun" to it.itemQun,
-                "productDes" to it.itemSec
+                "productId" to it.productId,
+                "productName" to it.productName,
+                "productImg" to it.productImg,
+                "productPrice" to it.productPrice,
+                "productQun" to it.productQun,
+                "productDes" to it.productDes
             )
         }
         val cartData = hashMapOf("cartId" to cart.cartId, "cartItem" to cartItem)
         firestore.collection("user").document(document).update("cart", cartData).await()
     }
 
-    override suspend fun fetchCart(cartId: String): UserModel.UserCart {
-        val collection = firestore.collection("user")
+    override suspend fun fetchCart(cartId: String): CartModel.Cart {
+        val snapshot = firestore.collection("user")
             .whereEqualTo("cart.cartId", cartId)
             .get()
             .await()
-        val doc = collection.documents.firstOrNull() ?: throw Exception("Cart not found")
-        return doc.get("cart") as UserModel.UserCart
+
+        val userDoc = snapshot.documents.firstOrNull() ?: throw Exception("Cart not found")
+
+        // Extract the nested map
+        val cartMap = userDoc.get("cart") as? Map<*, *>
+            ?: throw Exception("Cart data missing")
+
+        // Convert the nested map into your CartModel.Cart
+        val cart = CartModel.Cart(
+            cartId = cartMap["cartId"] as? String ?: "",
+            cartItem = (cartMap["cartItem"] as? List<Map<String, Any>>)?.map {
+                CartModel.CartItem(
+                    productId = it["productId"] as? String ?: "",
+                    productName = it["productName"] as? String ?: "",
+                    productPrice = it["productPrice"] as? String ?: "",
+                    productQun = (it["productQun"] as? Long)?.toInt() ?: 0,
+                    productDes = it["productDes"] as? String ?: "",
+                    productImg = it["productImg"] as? String ?: ""
+                )
+            } ?: emptyList()
+        )
+
+        return cart
+    }
+
+    override suspend fun updateCartItem(
+        cartId: String,
+        cart: List<CartModel.CartItem>
+    ) {
+        val uid = auth.currentUser?.uid ?: throw Exception("User not logged in")
+
+        val cartItemList = cart.map { item ->
+            hashMapOf(
+                "productId" to item.productId,
+                "productName" to item.productName,
+                "productImg" to item.productImg,
+                "productPrice" to item.productPrice,
+                "productQun" to item.productQun,
+                "productDes" to item.productDes
+            )
+        }
+
+        val cartData = hashMapOf(
+            "cartId" to cartId,
+            "cartItem" to cartItemList
+        )
+
+        firestore.collection("user")
+            .document(uid)
+            .update("cart", cartData)
+            .await()
     }
 
     override suspend fun clearCart() {
@@ -117,13 +180,7 @@ class DocumentApiFirebaseImpl @Inject constructor(
     override suspend fun fetchUser(): UserModel.UserResponse {
         val userId = auth.currentUser?.uid ?: throw Exception("User not logged in")
         val document = firestore.collection("user").document(userId).get().await()
-        return UserModel.UserResponse(
-            userId = document.getString("userId") ?: "",
-            userNum = document.getString("userNum") ?: "",
-            userType = if (document.getString("userType") == USERTYPE.GUEST.name) USERTYPE.GUEST else USERTYPE.LOGGED,
-            isLogin = document.getBoolean("isLogin") ?: false,
-            cart = document.get("cart") as? UserModel.UserCart
-        )
+        return document.toObject(UserModel.UserResponse::class.java) ?: throw Exception("User not found")
     }
 
     override suspend fun guestLogin(): String {
@@ -154,7 +211,7 @@ class DocumentApiFirebaseImpl @Inject constructor(
 
         val cartData = if (!oldGuestId.isNullOrEmpty()) {
             val guestDoc = firestore.collection("user").document(oldGuestId).get().await()
-            guestDoc.get("cart") as? UserModel.UserCart
+            guestDoc.get("cart") as? CartModel.Cart
         } else null
 
         val userData = hashMapOf(

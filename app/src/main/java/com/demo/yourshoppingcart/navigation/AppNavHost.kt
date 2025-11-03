@@ -1,5 +1,6 @@
 package com.demo.yourshoppingcart.navigation
 
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -32,7 +33,7 @@ fun AppNavHost(
                 isDarkTheme = isDarkTheme,
                 onThemeToggle = onThemeToggle,
                 onCartClick = {
-                    navController.navigate(NavRoutes.CART)
+                    navController.navigate(NavRoutes.cartScreen(it))
                 },
                 onItemClick = { itemId ->
                     navController.navigate(NavRoutes.productDetails(itemId))
@@ -54,12 +55,17 @@ fun AppNavHost(
         }
 
         composable(
-            route = NavRoutes.CART
-        ) {
+            route = "${NavRoutes.CART}/{cartId}",
+            arguments = listOf(navArgument("cartId") { type = NavType.StringType })
+
+        ) {backStackEntry ->
+            val cartId = backStackEntry.arguments?.getString("cartId") ?: ""
+            Log.e("CHECK",user.cart?.cartId.toString())
             CartScreen(
                 onBackClick = { navController.popBackStack() },
-                productIds =quantityViewModel.quantities.keys.toList(),
-                cartId = user.cart?.cartId ?: ""
+                productIds = quantityViewModel.quantities.keys.toList(),
+                cartId = cartId,
+                quantityViewModel = quantityViewModel
             )
         }
     }

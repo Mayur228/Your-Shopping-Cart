@@ -1,6 +1,7 @@
 package com.demo.yourshoppingcart.user.data.repository
 
 import com.demo.yourshoppingcart.Resource
+import com.demo.yourshoppingcart.home.data.model.HomeModel
 import com.demo.yourshoppingcart.user.data.model.UserModel
 import com.demo.yourshoppingcart.user.data.source.UserSource
 import com.demo.yourshoppingcart.user.domain.entity.cartEntity
@@ -9,23 +10,6 @@ import org.koin.core.annotation.Factory
 
 @Factory
 class UserRepositoryImpl(private val source: UserSource) : UserRepository {
-    override suspend fun addCart(cart: UserModel.UserCart): Resource<Unit> {
-        return try {
-            val data = source.addCart(cart = cart)
-            Resource.Data(Unit)
-        }catch (e: Exception) {
-            Resource.Error(e)
-        }
-    }
-
-    override suspend fun getCart(cartId: String): Resource<cartEntity> {
-        return try {
-            val data = source.getCart(cartId = cartId)
-            Resource.Data(data)
-        }catch (e: Exception) {
-            Resource.Error(e)
-        }
-    }
 
     override suspend fun getUser(): Resource<UserModel.UserResponse> {
         return try {

@@ -5,7 +5,9 @@ import com.demo.yourshoppingcart.home.data.repository.HomeRepositoryImpl
 import com.demo.yourshoppingcart.home.domain.repository.HomeRepository
 import com.demo.yourshoppingcart.home.domain.usecase.GetAllItemUseCase
 import com.demo.yourshoppingcart.home.domain.usecase.GetCategoryUseCase
+import com.demo.yourshoppingcart.home.domain.usecase.GetQuantityUseCase
 import com.demo.yourshoppingcart.home.domain.usecase.GetSelectedCategoryItemUseCase
+import com.demo.yourshoppingcart.user.domain.usecase.GetUserUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -28,5 +30,9 @@ class HomeViewModelModule {
     @Provides
     fun getSelectedCatItemUseCase(): GetSelectedCategoryItemUseCase {
         return Core.Home.getSelectedCategoryItemUseCase
+    }
+    @Provides
+    fun getUser(): GetQuantityUseCase {
+        return Core.Home.getUserUseCase
     }
 }

@@ -1,6 +1,6 @@
 package com.demo.yourshoppingcart.ui.cart
 
-import com.demo.yourshoppingcart.user.domain.entity.cartEntity
+import com.demo.yourshoppingcart.cart.domain.entity.cartEntity
 
 data class CartState(
     val isLoading: Boolean = false,
