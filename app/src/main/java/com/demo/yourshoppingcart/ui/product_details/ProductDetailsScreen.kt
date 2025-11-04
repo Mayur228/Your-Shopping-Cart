@@ -64,7 +64,6 @@ fun ProductDetailsScreen(
     val view by viewModel.viewState.collectAsState()
     viewModel.getItemDetails(itemId = itemId)
     val pagerState = rememberPagerState(pageCount = { view.item?.itemImages?.size ?: 0 })
-    var quantity by remember { mutableIntStateOf(0) }
 
     Scaffold(topBar = {
         TopAppBar(
@@ -93,12 +92,13 @@ fun ProductDetailsScreen(
                         onIncrease()
                         val newQuantity = quantityViewModel.getQuantity(productId)
                         cartViewModel.updateCartQuantity(
-                            cartId, productId, newQuantity
+                            productId, newQuantity
                         )
                     },
                     shape = RoundedCornerShape(50),
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(bottom = 50.dp)
                         .height(56.dp)
                 ) {
                     Text(text = "Add to Cart", style = MaterialTheme.typography.bodyLarge)
@@ -107,6 +107,7 @@ fun ProductDetailsScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(bottom = 50.dp)
                         .height(56.dp)
                         .clip(RoundedCornerShape(50))
                         .background(MaterialTheme.colorScheme.primary)
@@ -118,7 +119,7 @@ fun ProductDetailsScreen(
                         onDecrease()
                         val newQuantity = quantityViewModel.getQuantity(productId)
                         cartViewModel.updateCartQuantity(
-                            cartId, productId, newQuantity
+                            productId, newQuantity
                         )
                     }) {
                         Icon(
@@ -142,7 +143,7 @@ fun ProductDetailsScreen(
                         onIncrease()
                         val newQuantity = quantityViewModel.getQuantity(productId)
                         cartViewModel.updateCartQuantity(
-                            cartId, productId, newQuantity
+                            productId, newQuantity
                         )
                     }) {
                         Icon(
@@ -154,13 +155,6 @@ fun ProductDetailsScreen(
                 }
             }
         }
-
-        AddToCartButton(
-            quantity = quantity,
-            onAddToCart = { quantity = 1 },
-            onIncrease = { quantity++ },
-            onDecrease = { if (quantity > 0) quantity-- },
-        )
     }) { innerPadding ->
         when {
             view.isLoading -> {
@@ -182,8 +176,9 @@ fun ProductDetailsScreen(
                 Column(
                     modifier = Modifier
                         .padding(innerPadding)
-                        .fillMaxSize()
+                        .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
+                        .padding(bottom = 90.dp)
                 ) {
                     // Carousel Section
                     Box(modifier = Modifier.fillMaxWidth()) {
@@ -253,8 +248,6 @@ fun ProductDetailsScreen(
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
-
-                    Spacer(modifier = Modifier.height(100.dp)) // Space for bottom button
                 }
             }
         }

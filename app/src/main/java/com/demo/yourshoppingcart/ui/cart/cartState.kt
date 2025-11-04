@@ -7,3 +7,11 @@ data class CartState(
     val cartData: cartEntity? = null,
     val errorMessage: String? = null
 )
+/*
+sealed class CartViewState {
+    object Loading
+    data class CartData(
+        val cartId: String,
+        val cart: cartEntity
+    )
+}*/

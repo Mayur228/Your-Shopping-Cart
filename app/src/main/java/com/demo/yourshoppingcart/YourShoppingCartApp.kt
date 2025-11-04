@@ -19,8 +19,12 @@ class YourShoppingCartApp: Application() {
     @Inject
     lateinit var documentApi: DocumentApiFirebaseImpl
 
+    @Inject
+    lateinit var provideActivity: FTAClass
+
     override fun onCreate() {
         super.onCreate()
+        registerActivityLifecycleCallbacks(provideActivity)
         FirebaseApp.initializeApp(this)
         initCore()
     }

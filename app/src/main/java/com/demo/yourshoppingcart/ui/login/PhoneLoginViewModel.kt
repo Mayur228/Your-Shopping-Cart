@@ -28,7 +28,7 @@ class PhoneLoginViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                val sentVerificationId = sendOtpUseCase.invoke(phoneNumber)
+                val sentVerificationId = sendOtpUseCase.invoke("+${91}${phoneNumber}")
 
                 verificationId = sentVerificationId
                 _state.value = _state.value.copy(

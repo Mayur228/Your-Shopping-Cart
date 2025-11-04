@@ -6,6 +6,7 @@ object NavRoutes {
     const val HOME = "home"
     const val PRODUCT_DETAILS = "product_details"
     const val CART = "cart"
+    const val PHONE_LOGIN = "phone_login"
 
 
     fun productDetails(itemId: String) = "$PRODUCT_DETAILS/$itemId"

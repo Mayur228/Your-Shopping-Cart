@@ -20,9 +20,9 @@ class CartRepositoryImpl(private val source: CartSource) : CartRepository {
         }
     }
 
-    override suspend fun getCart(cartId: String): Resource<cartEntity> {
+    override suspend fun getCart(): Resource<cartEntity> {
         return try {
-            val data = source.getCart(cartId = cartId)
+            val data = source.getCart()
             Resource.Data(data)
         }catch (e: Exception) {
             Resource.Error(e)
@@ -60,6 +60,15 @@ class CartRepositoryImpl(private val source: CartSource) : CartRepository {
             )
             Resource.Data("Updated")
         } catch (e: Exception) {
+            Resource.Error(e)
+        }
+    }
+
+    override suspend fun clearCart(): Resource<String> {
+        return try {
+         source.clearCart()
+            Resource.Data("CLear")
+        }catch (e: Exception){
             Resource.Error(e)
         }
     }
