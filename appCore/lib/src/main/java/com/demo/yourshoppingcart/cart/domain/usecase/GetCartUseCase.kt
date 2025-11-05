@@ -7,7 +7,7 @@ import org.koin.core.annotation.Factory
 
 @Factory
 class GetCartUseCase(private val cartRepository: CartRepository) {
-    suspend operator fun invoke(cartId: String): Resource<cartEntity> {
-        return cartRepository.getCart(cartId = cartId)
+    suspend operator fun invoke(): Resource<cartEntity> {
+        return cartRepository.getCart()
     }
 }

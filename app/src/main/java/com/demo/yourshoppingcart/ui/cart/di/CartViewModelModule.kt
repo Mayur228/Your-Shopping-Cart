@@ -2,6 +2,7 @@ package com.demo.yourshoppingcart.ui.cart.di
 
 import com.demo.yourshoppingcart.Core
 import com.demo.yourshoppingcart.cart.domain.usecase.AddCartUseCase
+import com.demo.yourshoppingcart.cart.domain.usecase.ClearCartUseCase
 import com.demo.yourshoppingcart.cart.domain.usecase.GetCartUseCase
 import com.demo.yourshoppingcart.cart.domain.usecase.GetProductsUseCase
 import com.demo.yourshoppingcart.cart.domain.usecase.UpdateCartUseCase
@@ -30,6 +31,11 @@ class CartViewModelModule {
     @Provides
     fun updateCartUseCase(): UpdateCartUseCase {
         return Core.Cart.updateCartUseCase
+    }
+
+    @Provides
+    fun clearCartUseCase(): ClearCartUseCase {
+        return Core.Cart.clearCartUseCase
     }
     /*@Provides
     fun provideQuantityViewModel(): QuantityViewModel {

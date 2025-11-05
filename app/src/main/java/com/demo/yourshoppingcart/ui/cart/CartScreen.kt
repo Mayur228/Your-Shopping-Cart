@@ -2,7 +2,18 @@ package com.demo.yourshoppingcart.ui.cart
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -10,13 +21,25 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import com.demo.yourshoppingcart.common.QuantityView
 import com.demo.yourshoppingcart.common.QuantityViewModel
@@ -24,22 +47,20 @@ import com.demo.yourshoppingcart.common.QuantityViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CartScreen(
-    productIds: List<String>?,
-    cartId: String,
     onBackClick: () -> Unit,
-    quantityViewModel: QuantityViewModel,
-    cartViewModel: CartViewModel
+    cartViewModel: CartViewModel,
+    isPhoneLogin: Boolean,
+    navigateToPhoneLogin: () -> Unit
 ) {
     val viewState by cartViewModel.viewState.collectAsState()
 
     // Load cart once
-    LaunchedEffect(cartId, productIds) {
+    /*LaunchedEffect(Unit) {
         cartViewModel.loadCart(
             productIds = productIds,
-            cartId = cartId,
             productQuantity = quantityViewModel.quantities
         )
-    }
+    }*/
 
     Scaffold(
         topBar = {
@@ -60,12 +81,17 @@ fun CartScreen(
             if (totalPrice > 0) {
                 Button(
                     onClick = {
-                        cartViewModel.checkout(cartId)
-                        quantityViewModel.reset()
+                        if (isPhoneLogin) {
+                            cartViewModel.checkout()
+                        } else {
+                            navigateToPhoneLogin()
+                        }
                     },
+                    shape = RoundedCornerShape(50),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
+                        .padding(bottom = 50.dp)
+                        .height(56.dp)
                 ) {
                     Text("Checkout (₹$totalPrice)")
                 }
@@ -107,32 +133,31 @@ fun CartScreen(
                     contentPadding = PaddingValues(16.dp)
                 ) {
                     items(cartItems) { item ->
-                        QuantityView(productId = item.productId, viewModel = quantityViewModel) {
-                                quantity, onIncrease, onDecrease ->
-                            ProductItemCard(
-                                itemName = item.productName,
-                                itemPrice = item.productPrice,
-                                itemDes = item.productDes,
-                                itemImg = item.productImg,
-                                quantity = quantity,
-                                onIncrease = {
-                                    onIncrease()
-                                    cartViewModel.updateCartQuantity(
-                                        cartId,
-                                        item.productId,
-                                        quantity + 1
-                                    )
-                                },
-                                onDecrease = {
-                                    onDecrease()
-                                    cartViewModel.updateCartQuantity(
-                                        cartId,
-                                        item.productId,
-                                        quantity - 1
-                                    )
-                                }
-                            )
-                        }
+                        /*QuantityView(
+                            productId = item.productId,
+                            viewModel = quantityViewModel
+                        ) { quantity, onIncrease, onDecrease ->
+
+                        }*/
+                        ProductItemCard(
+                            itemName = item.productName,
+                            itemPrice = item.productPrice,
+                            itemDes = item.productDes,
+                            itemImg = item.productImg,
+                            quantity = item.productQun,
+                            onIncrease = {
+                                cartViewModel.updateCartQuantity(
+                                    item.productId,
+                                    item.productQun + 1
+                                )
+                            },
+                            onDecrease = {
+                                cartViewModel.updateCartQuantity(
+                                    item.productId,
+                                    item.productQun - 1
+                                )
+                            }
+                        )
                     }
                 }
             }

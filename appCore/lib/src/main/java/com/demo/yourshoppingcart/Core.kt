@@ -8,6 +8,7 @@ import com.demo.yourshoppingcart.home.domain.usecase.GetCategoryUseCase
 import com.demo.yourshoppingcart.home.domain.usecase.GetSelectedCategoryItemUseCase
 import com.demo.yourshoppingcart.product_details.domain.usecase.GetProductDetailsUseCase
 import com.demo.yourshoppingcart.cart.domain.usecase.AddCartUseCase
+import com.demo.yourshoppingcart.cart.domain.usecase.ClearCartUseCase
 import com.demo.yourshoppingcart.cart.domain.usecase.GetCartUseCase
 import com.demo.yourshoppingcart.cart.domain.usecase.GetProductsUseCase
 import com.demo.yourshoppingcart.user.domain.usecase.GetUserUseCase
@@ -90,6 +91,9 @@ object Core {
             get() = get().get()
 
         val updateCartUseCase: UpdateCartUseCase
+            get() = get().get()
+
+        val clearCartUseCase: ClearCartUseCase
             get() = get().get()
 
     }

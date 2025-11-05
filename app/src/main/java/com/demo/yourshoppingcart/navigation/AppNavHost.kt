@@ -12,7 +12,9 @@ import com.demo.yourshoppingcart.common.QuantityViewModel
 import com.demo.yourshoppingcart.ui.cart.CartScreen
 import com.demo.yourshoppingcart.ui.cart.CartViewModel
 import com.demo.yourshoppingcart.ui.home.HomeScreen
+import com.demo.yourshoppingcart.ui.login.PhoneLoginScreen
 import com.demo.yourshoppingcart.ui.product_details.ProductDetailsScreen
+import com.demo.yourshoppingcart.user.data.model.USERTYPE
 import com.demo.yourshoppingcart.user.data.model.UserModel
 
 @Composable
@@ -35,7 +37,7 @@ fun AppNavHost(
                 isDarkTheme = isDarkTheme,
                 onThemeToggle = onThemeToggle,
                 onCartClick = {
-                    navController.navigate(NavRoutes.cartScreen(it))
+                    navController.navigate(NavRoutes.CART)
                 },
                 onItemClick = { itemId ->
                     navController.navigate(NavRoutes.productDetails(itemId))
@@ -59,18 +61,23 @@ fun AppNavHost(
         }
 
         composable(
-            route = "${NavRoutes.CART}/{cartId}",
-            arguments = listOf(navArgument("cartId") { type = NavType.StringType })
-
+            route = NavRoutes.CART,
         ) {backStackEntry ->
-            val cartId = backStackEntry.arguments?.getString("cartId") ?: ""
-            Log.e("CHECK",user.cart?.cartId.toString())
             CartScreen(
                 onBackClick = { navController.popBackStack() },
-                productIds = quantityViewModel.quantities.keys.toList(),
-                cartId = cartId,
-                quantityViewModel = quantityViewModel,
-                cartViewModel = cartViewModel
+                cartViewModel = cartViewModel,
+                isPhoneLogin = user.userType == USERTYPE.LOGGED,
+                navigateToPhoneLogin = {
+                    navController.navigate(NavRoutes.PHONE_LOGIN)
+                }
+            )
+        }
+
+        composable(route = NavRoutes.PHONE_LOGIN) {
+            PhoneLoginScreen(
+                onLoginSuccess = {
+                    navController.popBackStack()
+                }
             )
         }
     }

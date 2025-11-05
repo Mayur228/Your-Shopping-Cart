@@ -1,20 +1,28 @@
 package com.demo.yourshoppingcart.framework.firebase
 
+import android.app.Activity
+import android.util.Log
+import com.demo.yourshoppingcart.FTAClass
 import com.demo.yourshoppingcart.cart.data.model.CartModel
 import com.demo.yourshoppingcart.common.network.DocumentApi
 import com.demo.yourshoppingcart.home.data.model.HomeModel
 import com.demo.yourshoppingcart.product_details.data.model.ProductDetailsModel
 import com.demo.yourshoppingcart.user.data.model.USERTYPE
 import com.demo.yourshoppingcart.user.data.model.UserModel
+import com.google.firebase.FirebaseException
 import com.google.firebase.auth.*
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import kotlin.coroutines.resume
 
 class DocumentApiFirebaseImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val auth: FirebaseAuth,
-    //private val activityProvider: () -> Activity
+    private val activityProvider: FTAClass
 ) : DocumentApi {
 
     override suspend fun fetchCategory(): HomeModel.CategoryResponse {
@@ -114,20 +122,22 @@ class DocumentApiFirebaseImpl @Inject constructor(
         firestore.collection("user").document(document).update("cart", cartData).await()
     }
 
-    override suspend fun fetchCart(cartId: String): CartModel.Cart {
-        val snapshot = firestore.collection("user")
-            .whereEqualTo("cart.cartId", cartId)
+    override suspend fun fetchCart(): CartModel.Cart {
+        val userId = auth.currentUser?.uid ?: ""
+        // Get the user document
+        val userDoc = firestore.collection("user")
+            .document(userId)
             .get()
             .await()
 
-        val userDoc = snapshot.documents.firstOrNull() ?: throw Exception("Cart not found")
+        if (!userDoc.exists()) throw Exception("User not found")
 
-        // Extract the nested map
+        // Extract the cart map
         val cartMap = userDoc.get("cart") as? Map<*, *>
             ?: throw Exception("Cart data missing")
 
-        // Convert the nested map into your CartModel.Cart
-        val cart = CartModel.Cart(
+        // Convert the map to CartModel.Cart
+        return CartModel.Cart(
             cartId = cartMap["cartId"] as? String ?: "",
             cartItem = (cartMap["cartItem"] as? List<Map<String, Any>>)?.map {
                 CartModel.CartItem(
@@ -140,8 +150,6 @@ class DocumentApiFirebaseImpl @Inject constructor(
                 )
             } ?: emptyList()
         )
-
-        return cart
     }
 
     override suspend fun updateCartItem(
@@ -174,7 +182,7 @@ class DocumentApiFirebaseImpl @Inject constructor(
 
     override suspend fun clearCart() {
         val uid = auth.currentUser?.uid ?: return
-        firestore.collection("user").document(uid).update("cart", null).await()
+        firestore.collection("user").document(uid).update("cart", emptyMap<String, Any>()).await()
     }
 
     override suspend fun fetchUser(): UserModel.UserResponse {
@@ -229,11 +237,13 @@ class DocumentApiFirebaseImpl @Inject constructor(
     }
 
     override suspend fun sendOtpFlow(phoneNumber: String): String {
-       /* return suspendCancellableCoroutine { cont ->
+        Log.e("CHECK",phoneNumber)
+        return suspendCancellableCoroutine { cont ->
+            val activity = activityProvider.currentActivity?: throw NullPointerException()
             val options = PhoneAuthOptions.newBuilder(auth)
                 .setPhoneNumber(phoneNumber)
                 .setTimeout(60L, TimeUnit.SECONDS)
-                .setActivity(activityProvider())
+                .setActivity(activity)
                 .setCallbacks(object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
                     override fun onVerificationCompleted(p0: PhoneAuthCredential) {}
                     override fun onVerificationFailed(e: FirebaseException) {
@@ -246,7 +256,6 @@ class DocumentApiFirebaseImpl @Inject constructor(
                 .build()
 
             PhoneAuthProvider.verifyPhoneNumber(options)
-        }*/
-        return ""
+        }
     }
 }

@@ -109,7 +109,6 @@ fun ItemList(
                                     onIncrease()
                                     val newQuantity = quantityViewModel.getQuantity(item.id)
                                     cartViewModel.updateCartQuantity(
-                                        cartId,
                                         productId = item.id,
                                         newQuantity
                                     )
@@ -128,7 +127,6 @@ fun ItemList(
                                         onDecrease()
                                         val newQuantity = quantityViewModel.getQuantity(item.id)
                                         cartViewModel.updateCartQuantity(
-                                            cartId,
                                             productId = item.id,
                                             newQuantity
                                         )
@@ -151,7 +149,6 @@ fun ItemList(
                                         onIncrease()
                                         val newQuantity = quantityViewModel.getQuantity(item.id)
                                         cartViewModel.updateCartQuantity(
-                                            cartId,
                                             item.id,
                                             newQuantity
                                         )
