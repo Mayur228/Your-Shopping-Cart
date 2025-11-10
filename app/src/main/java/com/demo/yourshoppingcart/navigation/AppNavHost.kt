@@ -1,14 +1,13 @@
 package com.demo.yourshoppingcart.navigation
 
-import android.util.Log
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.demo.yourshoppingcart.common.QuantityViewModel
 import com.demo.yourshoppingcart.ui.cart.CartScreen
 import com.demo.yourshoppingcart.ui.cart.CartViewModel
 import com.demo.yourshoppingcart.ui.home.HomeScreen
@@ -24,7 +23,6 @@ fun AppNavHost(
     onThemeToggle: (Boolean) -> Unit,
     user: UserModel.UserResponse
 ) {
-    val quantityViewModel: QuantityViewModel = hiltViewModel()
     val cartViewModel: CartViewModel = hiltViewModel()
 
     NavHost(
@@ -42,8 +40,7 @@ fun AppNavHost(
                 onItemClick = { itemId ->
                     navController.navigate(NavRoutes.productDetails(itemId))
                 },
-                quantityViewModel = quantityViewModel,
-                cartViewModel = cartViewModel
+                cartViewModel = cartViewModel,
             )
         }
 
@@ -55,8 +52,8 @@ fun AppNavHost(
             ProductDetailsScreen(
                 itemId = itemId,
                 onBackClick = { navController.popBackStack() },
-                quantityViewModel = quantityViewModel,
-                cartViewModel = cartViewModel
+                cartViewModel = cartViewModel,
+                quantity = cartViewModel.viewState.collectAsState().value.cartData?.cartItem?.find { it.productId == itemId }?.productQun ?: 0
             )
         }
 

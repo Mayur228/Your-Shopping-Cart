@@ -1,3 +1,4 @@
+/*
 package com.demo.yourshoppingcart.common
 
 import androidx.compose.runtime.mutableStateMapOf
@@ -40,3 +41,4 @@ class QuantityViewModel @Inject constructor() : ViewModel() {
         _quantities.clear()
     }
 }
+*/

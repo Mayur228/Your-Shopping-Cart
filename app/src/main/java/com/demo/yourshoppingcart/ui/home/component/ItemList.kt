@@ -24,6 +24,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,8 +35,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.demo.yourshoppingcart.common.QuantityView
-import com.demo.yourshoppingcart.common.QuantityViewModel
+import com.demo.yourshoppingcart.cart.domain.entity.cartItemEntity
 import com.demo.yourshoppingcart.home.domain.entity.HomeEntity
 import com.demo.yourshoppingcart.ui.cart.CartViewModel
 
@@ -42,14 +43,19 @@ import com.demo.yourshoppingcart.ui.cart.CartViewModel
 fun ItemList(
     items: List<HomeEntity.ItemEntity>,
     onItemSelected: (itemId: String) -> Unit,
-    quantityViewModel: QuantityViewModel,
-    cartViewModel: CartViewModel
+    cartViewModel: CartViewModel,
 ) {
+    val cartState by cartViewModel.viewState.collectAsState()
+    val cartItems = cartState.cartData?.cartItem.orEmpty()
+
     LazyColumn(
         modifier = Modifier.padding(8.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(items) { item ->
+        items(
+            items = items,
+        ) { item ->
+            val quantity = cartItems.find { it.productId == item.id }?.productQun ?: 0
 
             Card(
                 modifier = Modifier
@@ -97,68 +103,63 @@ fun ItemList(
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    val cartId = cartViewModel.viewState.value.cartData?.cartId ?: ""
-
-                    QuantityView(
-                        productId = item.id,
-                        viewModel = quantityViewModel
-                    ) { quantity, onIncrease, onDecrease ->
-                        if (quantity == 0) {
-                            Button(
-                                onClick = {
-                                    onIncrease()
-                                    val newQuantity = quantityViewModel.getQuantity(item.id)
-                                    cartViewModel.updateCartQuantity(
+                    if (quantity == 0) {
+                        Button(
+                            onClick = {
+                                cartViewModel.createOrUpdateCart(
+                                    productId = item.id,
+                                    1,
+                                    cartItem = cartItemEntity(
                                         productId = item.id,
-                                        newQuantity
+                                        productName = item.name,
+                                        productPrice = item.price,
+                                        productQun = 1,
+                                        productDes = item.des,
+                                        productImg = item.img
+                                    )
+                                )
+                            },
+                            shape = RoundedCornerShape(50),
+                            modifier = Modifier.height(40.dp)
+                        ) {
+                            Text(text = "Add")
+                        }
+                    } else {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            IconButton(
+                                onClick = {
+                                    cartViewModel.createOrUpdateCart(
+                                        productId = item.id,
+                                        quantity - 1
                                     )
                                 },
-                                shape = RoundedCornerShape(50),
-                                modifier = Modifier.height(40.dp)
                             ) {
-                                Text(text = "Add")
-                            }
-                        } else {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                IconButton(
-                                    onClick = {
-                                        onDecrease()
-                                        val newQuantity = quantityViewModel.getQuantity(item.id)
-                                        cartViewModel.updateCartQuantity(
-                                            productId = item.id,
-                                            newQuantity
-                                        )
-                                    },
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Remove,
-                                        contentDescription = "Remove"
-                                    )
-                                }
-
-                                Text(
-                                    text = quantity.toString(),
-                                    modifier = Modifier.width(24.dp),
-                                    textAlign = TextAlign.Center
+                                Icon(
+                                    imageVector = Icons.Default.Remove,
+                                    contentDescription = "Remove"
                                 )
+                            }
 
-                                IconButton(
-                                    onClick = {
-                                        onIncrease()
-                                        val newQuantity = quantityViewModel.getQuantity(item.id)
-                                        cartViewModel.updateCartQuantity(
-                                            item.id,
-                                            newQuantity
-                                        )
-                                    }
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Add,
-                                        contentDescription = "Add"
+                            Text(
+                                text = quantity.toString(),
+                                modifier = Modifier.width(24.dp),
+                                textAlign = TextAlign.Center
+                            )
+
+                            IconButton(
+                                onClick = {
+                                    cartViewModel.createOrUpdateCart(
+                                        item.id,
+                                        quantity + 1
                                     )
                                 }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = "Add"
+                                )
                             }
                         }
                     }
@@ -167,3 +168,74 @@ fun ItemList(
         }
     }
 }
+/*
+@Composable
+private fun ItemCard(
+    item: HomeEntity.ItemEntity,
+    quantity: Int,
+    onAdd: () -> Unit,
+    onRemove: () -> Unit,
+    onSelect: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onSelect() },
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(12.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AsyncImage(
+                model = item.img,
+                contentDescription = item.name,
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Crop
+            )
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = item.name, style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = item.des,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = "$${item.price}",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            if (quantity == 0) {
+                Button(onClick = onAdd, shape = RoundedCornerShape(50), modifier = Modifier.height(40.dp)) {
+                    Text("Add")
+                }
+            } else {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onRemove) {
+                        Icon(Icons.Default.Remove, contentDescription = "Remove")
+                    }
+                    Text(
+                        text = quantity.toString(),
+                        modifier = Modifier.width(24.dp),
+                        textAlign = TextAlign.Center
+                    )
+                    IconButton(onClick = onAdd) {
+                        Icon(Icons.Default.Add, contentDescription = "Add")
+                    }
+                }
+            }
+        }
+    }
+}*/

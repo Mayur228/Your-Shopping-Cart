@@ -3,11 +3,8 @@ package com.demo.yourshoppingcart.ui.product_details
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.demo.yourshoppingcart.Resource
-import com.demo.yourshoppingcart.home.domain.entity.HomeEntity
-import com.demo.yourshoppingcart.product_details.domain.entity.ProductDetailsEntity
 import com.demo.yourshoppingcart.product_details.domain.entity.detailsEntity
 import com.demo.yourshoppingcart.product_details.domain.usecase.GetProductDetailsUseCase
-import com.demo.yourshoppingcart.ui.home.HomeViewState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

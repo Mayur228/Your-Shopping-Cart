@@ -39,14 +39,15 @@ class CartRepositoryImpl(private val source: CartSource) : CartRepository {
     }*/
 
     override suspend fun fetchProducts(productids: List<String>): Resource<List<HomeModel.Item>> {
-        return try {
+        /*return try {
             val data = source.fetchProducts(
                 productids
             )
             Resource.Data(data)
         } catch (e: Exception) {
             Resource.Error(e)
-        }
+        }*/
+        return Resource.Data(emptyList())
     }
 
     override suspend fun updateCart(

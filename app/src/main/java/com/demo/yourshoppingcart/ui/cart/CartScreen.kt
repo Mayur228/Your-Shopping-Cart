@@ -24,7 +24,6 @@ import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -33,7 +32,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -41,8 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
-import com.demo.yourshoppingcart.common.QuantityView
-import com.demo.yourshoppingcart.common.QuantityViewModel
+import com.demo.yourshoppingcart.common.LoadingView
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,14 +50,6 @@ fun CartScreen(
     navigateToPhoneLogin: () -> Unit
 ) {
     val viewState by cartViewModel.viewState.collectAsState()
-
-    // Load cart once
-    /*LaunchedEffect(Unit) {
-        cartViewModel.loadCart(
-            productIds = productIds,
-            productQuantity = quantityViewModel.quantities
-        )
-    }*/
 
     Scaffold(
         topBar = {
@@ -101,14 +90,7 @@ fun CartScreen(
 
         when {
             viewState.isLoading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
+                LoadingView()
             }
 
             viewState.cartData?.cartItem.isNullOrEmpty() -> {
@@ -133,12 +115,6 @@ fun CartScreen(
                     contentPadding = PaddingValues(16.dp)
                 ) {
                     items(cartItems) { item ->
-                        /*QuantityView(
-                            productId = item.productId,
-                            viewModel = quantityViewModel
-                        ) { quantity, onIncrease, onDecrease ->
-
-                        }*/
                         ProductItemCard(
                             itemName = item.productName,
                             itemPrice = item.productPrice,
@@ -146,13 +122,13 @@ fun CartScreen(
                             itemImg = item.productImg,
                             quantity = item.productQun,
                             onIncrease = {
-                                cartViewModel.updateCartQuantity(
+                                cartViewModel.createOrUpdateCart(
                                     item.productId,
-                                    item.productQun + 1
+                                    item.productQun + 1,
                                 )
                             },
                             onDecrease = {
-                                cartViewModel.updateCartQuantity(
+                                cartViewModel.createOrUpdateCart(
                                     item.productId,
                                     item.productQun - 1
                                 )

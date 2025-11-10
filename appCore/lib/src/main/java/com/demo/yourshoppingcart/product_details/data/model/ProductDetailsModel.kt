@@ -7,6 +7,7 @@ abstract class ProductDetailsModel {
         val itemName: String,
         val itemDescription: String,
         val itemImages: List<String>,
+        val itemImage: String,
         val itemPrice: String
     )
 }

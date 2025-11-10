@@ -4,7 +4,6 @@ import com.demo.yourshoppingcart.Core
 import com.demo.yourshoppingcart.cart.domain.usecase.AddCartUseCase
 import com.demo.yourshoppingcart.cart.domain.usecase.ClearCartUseCase
 import com.demo.yourshoppingcart.cart.domain.usecase.GetCartUseCase
-import com.demo.yourshoppingcart.cart.domain.usecase.GetProductsUseCase
 import com.demo.yourshoppingcart.cart.domain.usecase.UpdateCartUseCase
 import dagger.Module
 import dagger.Provides
@@ -23,10 +22,6 @@ class CartViewModelModule {
     fun addCartUseCase(): AddCartUseCase {
         return Core.Cart.addCartUseCase
     }
-    @Provides
-    fun getProductDetailsUseCase(): GetProductsUseCase {
-        return Core.Cart.getProductsUseCase
-    }
 
     @Provides
     fun updateCartUseCase(): UpdateCartUseCase {
@@ -37,8 +32,4 @@ class CartViewModelModule {
     fun clearCartUseCase(): ClearCartUseCase {
         return Core.Cart.clearCartUseCase
     }
-    /*@Provides
-    fun provideQuantityViewModel(): QuantityViewModel {
-        return QuantityViewModel()
-    }*/
 }

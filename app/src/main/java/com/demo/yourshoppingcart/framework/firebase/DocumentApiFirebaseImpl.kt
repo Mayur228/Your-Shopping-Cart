@@ -83,26 +83,9 @@ class DocumentApiFirebaseImpl @Inject constructor(
             itemName = data?.getString("itemName") ?: "",
             itemImages = data?.get("itemImages") as? List<String> ?: emptyList(),
             itemDescription = data?.getString("itemDes") ?: "",
-            itemPrice = data?.getString("itemPrice") ?: ""
+            itemPrice = data?.getString("itemPrice") ?: "",
+            itemImage = data?.getString("itemImg") ?: ""
         )
-    }
-
-    override suspend fun fetchProducts(productIds: List<String>): List<HomeModel.Item> {
-        val snapshot = firestore.collection("categoryItem")
-            .whereIn("itemId", productIds)
-            .get()
-            .await()
-
-        return snapshot.documents.mapNotNull { doc ->
-            HomeModel.Item(
-                itemId = doc.getString("itemId") ?: "",
-                itemName = doc.getString("itemName") ?: "",
-                itemDes = doc.getString("itemDes") ?: "",
-                itemImg = doc.getString("itemImg") ?: "",
-                itemPrice = doc.getString("itemPrice") ?: "",
-                cat = doc.getString("cat") ?: ""
-            )
-        }
     }
 
     override suspend fun addProductToCart(cart: CartModel.Cart) {
@@ -237,7 +220,6 @@ class DocumentApiFirebaseImpl @Inject constructor(
     }
 
     override suspend fun sendOtpFlow(phoneNumber: String): String {
-        Log.e("CHECK",phoneNumber)
         return suspendCancellableCoroutine { cont ->
             val activity = activityProvider.currentActivity?: throw NullPointerException()
             val options = PhoneAuthOptions.newBuilder(auth)

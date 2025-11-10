@@ -23,7 +23,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,9 +34,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,18 +43,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
-import com.demo.yourshoppingcart.common.QuantityView
-import com.demo.yourshoppingcart.common.QuantityViewModel
+import com.demo.yourshoppingcart.cart.domain.entity.cartItemEntity
+import com.demo.yourshoppingcart.common.LoadingView
 import com.demo.yourshoppingcart.ui.cart.CartViewModel
-import com.demo.yourshoppingcart.ui.product_details.component.AddToCartButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductDetailsScreen(
     itemId: String,
     onBackClick: () -> Boolean,
-    quantityViewModel: QuantityViewModel,
-    cartViewModel: CartViewModel
+    cartViewModel: CartViewModel,
+    quantity: Int
 ) {
     val viewModel = hiltViewModel<ProductDetailsViewModel>()
     val view by viewModel.viewState.collectAsState()
@@ -81,91 +76,83 @@ fun ProductDetailsScreen(
             )
         )
     }, bottomBar = {
-        val productId = view.item?.itemId ?: return@Scaffold
-        val cartId = cartViewModel.viewState.value.cartData?.cartId ?: ""
-        QuantityView(
-            productId = productId, viewModel = quantityViewModel
-        ) { quantity, onIncrease, onDecrease ->
-            if (quantity == 0) {
-                Button(
-                    onClick = {
-                        onIncrease()
-                        val newQuantity = quantityViewModel.getQuantity(productId)
-                        cartViewModel.updateCartQuantity(
-                            productId, newQuantity
+        val product = view.item ?: return@Scaffold
+        if (quantity == 0) {
+            Button(
+                onClick = {
+                    cartViewModel.createOrUpdateCart(
+                        product.itemId,
+                        1,
+                        cartItem = cartItemEntity(
+                            productId = product.itemId,
+                            productName = product.itemName,
+                            productPrice = product.itemPrice,
+                            productQun = 1,
+                            productDes = product.itemDescription,
+                            productImg = product.itemImage
                         )
-                    },
-                    shape = RoundedCornerShape(50),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 50.dp)
-                        .height(56.dp)
-                ) {
-                    Text(text = "Add to Cart", style = MaterialTheme.typography.bodyLarge)
-                }
-            } else {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 50.dp)
-                        .height(56.dp)
-                        .clip(RoundedCornerShape(50))
-                        .background(MaterialTheme.colorScheme.primary)
-                        .padding(horizontal = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    IconButton(onClick = {
-                        onDecrease()
-                        val newQuantity = quantityViewModel.getQuantity(productId)
-                        cartViewModel.updateCartQuantity(
-                            productId, newQuantity
-                        )
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.Remove,
-                            contentDescription = "Decrease",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-
-                    Text(
-                        text = quantity.toString(),
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier
-                            .padding(horizontal = 8.dp)
-                            .widthIn(min = 24.dp),
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
+                },
+                shape = RoundedCornerShape(50),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 50.dp)
+                    .height(56.dp)
+            ) {
+                Text(text = "Add to Cart", style = MaterialTheme.typography.bodyLarge)
+            }
+        } else {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 50.dp)
+                    .height(56.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(MaterialTheme.colorScheme.primary)
+                    .padding(horizontal = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                IconButton(onClick = {
+                    cartViewModel.createOrUpdateCart(
+                        product.itemId, quantity - 1
+                    )
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.Remove,
+                        contentDescription = "Decrease",
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
 
-                    IconButton(onClick = {
-                        onIncrease()
-                        val newQuantity = quantityViewModel.getQuantity(productId)
-                        cartViewModel.updateCartQuantity(
-                            productId, newQuantity
-                        )
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Increase",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
+                Text(
+                    text = quantity.toString(),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp)
+                        .widthIn(min = 24.dp),
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+
+                IconButton(onClick = {
+                    cartViewModel.createOrUpdateCart(
+                        product.itemId,
+                        quantity + 1
+                    )
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Increase",
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
                 }
             }
         }
     }) { innerPadding ->
         when {
             view.isLoading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
+                LoadingView()
             }
 
             view.errorMessage?.isNotEmpty() == true -> {

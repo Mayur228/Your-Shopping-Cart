@@ -1,3 +1,4 @@
+/*
 package com.demo.yourshoppingcart.common
 
 import androidx.compose.runtime.Composable
@@ -18,4 +19,4 @@ fun QuantityView(
         { viewModel.increaseQuantity(productId) },
         { viewModel.decreaseQuantity(productId) }
     )
-}
+}*/

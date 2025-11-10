@@ -11,7 +11,6 @@ interface DocumentApi {
     suspend fun fetchAllItems(): HomeModel.CategoryItemResponse
     suspend fun fetchSelectedCatItem(cat: String): HomeModel.CategoryItemResponse
     suspend fun fetchProductDetails(itemId: String): ProductDetailsModel.DetailModel
-    suspend fun fetchProducts(productIds: List<String>): List<HomeModel.Item>
     suspend fun addProductToCart(cart: CartModel.Cart)
     suspend fun fetchCart(): CartModel.Cart
     suspend fun updateCartItem(cartId: String,cart: List<CartModel.CartItem>)

@@ -1,6 +1,5 @@
 package com.demo.yourshoppingcart.ui.home
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,7 +7,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -19,14 +17,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.demo.yourshoppingcart.R
-import com.demo.yourshoppingcart.common.QuantityViewModel
+import com.demo.yourshoppingcart.common.LoadingView
 import com.demo.yourshoppingcart.ui.cart.CartViewModel
 import com.demo.yourshoppingcart.ui.home.component.CategoryList
 import com.demo.yourshoppingcart.ui.home.component.ItemList
@@ -36,21 +33,12 @@ import com.demo.yourshoppingcart.ui.home.component.ItemList
 fun HomeScreen(
     isDarkTheme: Boolean,
     onThemeToggle: (isDark: Boolean) -> Unit,
-    onCartClick: (cartId: String?) -> Unit,
+    onCartClick: () -> Unit,
     onItemClick: (itemId: String) -> Unit,
-    quantityViewModel: QuantityViewModel,
-    cartViewModel: CartViewModel
+    cartViewModel: CartViewModel,
 ) {
     val homeViewModel = hiltViewModel<HomeViewModel>()
     val view by homeViewModel.viewState.collectAsState()
-
-    LaunchedEffect(Unit) {
-        homeViewModel.getItemQuantity()
-    }
-    LaunchedEffect(view.itemsQuantity) {
-        // Update local quantity state when cart data changes
-        quantityViewModel.setQuantities(view.itemsQuantity)
-    }
 
     Scaffold(
         topBar = {
@@ -69,7 +57,7 @@ fun HomeScreen(
                     }
 
                     IconButton(onClick = {
-                        onCartClick(view.cartId)
+                        onCartClick()
                     }) {
                         Icon(
                             imageVector = Icons.Default.ShoppingCart,
@@ -82,14 +70,7 @@ fun HomeScreen(
     ) { innerPadding ->
         when {
             view.isLoading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
+                LoadingView()
             }
 
             view.errorMessage?.isNotEmpty() == true -> {
@@ -113,15 +94,14 @@ fun HomeScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     //Items View
                     if (view.isItemLoading) {
-                        //loading view
+                        LoadingView()
                     } else {
                         ItemList(
                             items = view.items,
                             onItemSelected = {
                                 onItemClick(it)
                             },
-                            quantityViewModel = quantityViewModel,
-                            cartViewModel = cartViewModel
+                            cartViewModel = cartViewModel,
                         )
                     }
                 }

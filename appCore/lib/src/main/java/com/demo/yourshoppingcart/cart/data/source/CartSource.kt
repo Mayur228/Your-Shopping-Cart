@@ -3,12 +3,13 @@ package com.demo.yourshoppingcart.cart.data.source
 import com.demo.yourshoppingcart.cart.data.model.CartModel
 import com.demo.yourshoppingcart.common.network.DocumentApi
 import com.demo.yourshoppingcart.home.data.model.HomeModel
+import com.demo.yourshoppingcart.product_details.data.model.ProductDetailsModel
 import org.koin.core.annotation.Factory
 
 interface CartSource {
     suspend fun getCart(): CartModel.Cart
     suspend fun addCart(cart: CartModel.Cart)
-    suspend fun fetchProducts(productids: List<String>): List<HomeModel.Item>
+    suspend fun fetchProducts(productId: String): ProductDetailsModel.DetailModel
     suspend fun updateCart(cartId: String,cart: List<CartModel.CartItem>)
     suspend fun clearCart()
 }
@@ -25,8 +26,8 @@ class CartResourceImpl(
         return documentApi.addProductToCart(cart = cart)
     }
 
-    override suspend fun fetchProducts(productids: List<String>): List<HomeModel.Item> {
-        return documentApi.fetchProducts(productids)
+    override suspend fun fetchProducts(productId: String): ProductDetailsModel.DetailModel {
+        return documentApi.fetchProductDetails(productId)
     }
 
     override suspend fun updateCart(
