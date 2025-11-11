@@ -48,7 +48,12 @@ class UserRepositoryImpl(private val source: UserSource) : UserRepository {
         }
     }
 
-    override suspend fun sendOtp(phoneNumber: String): String {
-        return source.sendOtp(phoneNumber)
+    override suspend fun sendOtp(phoneNumber: String): Resource<String> {
+        return try {
+            val data = source.sendOtp(phoneNumber)
+            Resource.Data(data)
+        } catch (e: Exception) {
+            Resource.Error(e)
+        }
     }
 }

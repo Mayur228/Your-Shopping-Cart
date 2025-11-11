@@ -2,10 +2,20 @@ package com.demo.yourshoppingcart.ui.home
 
 import com.demo.yourshoppingcart.home.domain.entity.HomeEntity
 
-data class HomeViewState(
-    val isLoading: Boolean = false,
-    val isItemLoading: Boolean = false,
-    val categories: List<HomeEntity.CategoryEntity> = emptyList(),
-    val items: List<HomeEntity.ItemEntity> = emptyList(),
-    val errorMessage: String? = null
-)
+sealed class HomeViewState {
+    object Loading : HomeViewState()
+    data class Success(
+        val categories: List<HomeEntity.CategoryEntity>,
+        val items: List<HomeEntity.ItemEntity>,
+        val isLoading: Boolean
+    ) : HomeViewState()
+    data class Error(val message: String) : HomeViewState()
+}
+
+sealed class HomeEvent {
+    object LoadHomeData: HomeEvent()
+    data class SelectCategory(val categoryId: String) : HomeEvent()
+    data class NavigateToProductDetails(val productId: String): HomeEvent()
+    object NavigateToCart: HomeEvent()
+    data class ToggleChange(val isDark: Boolean): HomeEvent()
+}

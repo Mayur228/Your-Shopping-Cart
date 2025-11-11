@@ -23,6 +23,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.demo.yourshoppingcart.R
+import com.demo.yourshoppingcart.common.ErrorView
 import com.demo.yourshoppingcart.common.LoadingView
 import com.demo.yourshoppingcart.ui.cart.CartViewModel
 import com.demo.yourshoppingcart.ui.home.component.CategoryList
@@ -46,7 +47,7 @@ fun HomeScreen(
                 title = { Text(stringResource(R.string.app_name)) },
                 actions = {
                     IconButton(onClick = {
-                        onThemeToggle(!isDarkTheme)
+                       onThemeToggle(!isDarkTheme)
                     }) {
                         Icon(
                             painter = painterResource(
@@ -68,36 +69,32 @@ fun HomeScreen(
             )
         }
     ) { innerPadding ->
-        when {
-            view.isLoading -> {
+        when(view) {
+            is HomeViewState.Error -> {
+                ErrorView((view as HomeViewState.Error).message)
+            }
+            HomeViewState.Loading -> {
                 LoadingView()
             }
-
-            view.errorMessage?.isNotEmpty() == true -> {
-                //error view
-            }
-
-            else -> {
+            is HomeViewState.Success -> {
+                val product = (view as HomeViewState.Success)
                 Column(
                     modifier = Modifier
                         .padding(innerPadding)
                         .fillMaxSize()
                 ) {
-                    // Categories View
                     CategoryList(
-                        categories = view.categories,
+                        categories = product.categories,
                         onCategorySelected = {
-                            homeViewModel.getSelectedCatItem(it)
+                           homeViewModel.getSelectedCatItem(it)
                         }
                     )
-
                     Spacer(modifier = Modifier.height(16.dp))
-                    //Items View
-                    if (view.isItemLoading) {
+                    if (product.isLoading) {
                         LoadingView()
-                    } else {
+                    }else {
                         ItemList(
-                            items = view.items,
+                            items = product.items,
                             onItemSelected = {
                                 onItemClick(it)
                             },
@@ -105,6 +102,18 @@ fun HomeScreen(
                         )
                     }
                 }
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        homeViewModel.viewEvent.collect { event ->
+            when (event) {
+                HomeEvent.LoadHomeData -> homeViewModel.loadData()
+                HomeEvent.NavigateToCart -> onCartClick()
+                is HomeEvent.NavigateToProductDetails -> onItemClick(event.productId)
+                is HomeEvent.SelectCategory -> homeViewModel.getSelectedCatItem(event.categoryId)
+                is HomeEvent.ToggleChange -> onThemeToggle(event.isDark)
             }
         }
     }

@@ -1,7 +1,6 @@
 package com.demo.yourshoppingcart.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -21,7 +20,7 @@ fun AppNavHost(
     navController: NavHostController,
     isDarkTheme: Boolean,
     onThemeToggle: (Boolean) -> Unit,
-    user: UserModel.UserResponse
+    user: UserModel.UserResponse?
 ) {
     val cartViewModel: CartViewModel = hiltViewModel()
 
@@ -53,7 +52,6 @@ fun AppNavHost(
                 itemId = itemId,
                 onBackClick = { navController.popBackStack() },
                 cartViewModel = cartViewModel,
-                quantity = cartViewModel.viewState.collectAsState().value.cartData?.cartItem?.find { it.productId == itemId }?.productQun ?: 0
             )
         }
 
@@ -63,7 +61,7 @@ fun AppNavHost(
             CartScreen(
                 onBackClick = { navController.popBackStack() },
                 cartViewModel = cartViewModel,
-                isPhoneLogin = user.userType == USERTYPE.LOGGED,
+                isPhoneLogin = user?.userType == USERTYPE.LOGGED,
                 navigateToPhoneLogin = {
                     navController.navigate(NavRoutes.PHONE_LOGIN)
                 }

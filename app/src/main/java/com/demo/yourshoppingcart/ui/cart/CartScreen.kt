@@ -39,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
+import com.demo.yourshoppingcart.common.ErrorView
 import com.demo.yourshoppingcart.common.LoadingView
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -63,18 +64,15 @@ fun CartScreen(
             )
         },
         bottomBar = {
-            val totalPrice = viewState.cartData?.cartItem?.sumOf {
+            val totalPrice = (viewState as CartState.Success).cartEntity.cartItem?.sumOf {
                 it.productQun * (it.productPrice.toIntOrNull() ?: 0)
             } ?: 0
 
             if (totalPrice > 0) {
                 Button(
                     onClick = {
-                        if (isPhoneLogin) {
-                            cartViewModel.checkout()
-                        } else {
-                            navigateToPhoneLogin()
-                        }
+                        if (isPhoneLogin) cartViewModel.checkout()
+                        else navigateToPhoneLogin()
                     },
                     shape = RoundedCornerShape(50),
                     modifier = Modifier
@@ -87,60 +85,54 @@ fun CartScreen(
             }
         }
     ) { innerPadding ->
+        when(viewState) {
+            CartState.Loading -> LoadingView()
+            is CartState.Success -> {
+                val cartItems = (viewState as CartState.Success).cartEntity.cartItem
 
-        when {
-            viewState.isLoading -> {
-                LoadingView()
-            }
-
-            viewState.cartData?.cartItem.isNullOrEmpty() -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("Your cart is empty")
-                }
-            }
-
-            else -> {
-                val cartItems = viewState.cartData?.cartItem ?: emptyList()
-
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(16.dp)
-                ) {
-                    items(cartItems) { item ->
-                        ProductItemCard(
-                            itemName = item.productName,
-                            itemPrice = item.productPrice,
-                            itemDes = item.productDes,
-                            itemImg = item.productImg,
-                            quantity = item.productQun,
-                            onIncrease = {
-                                cartViewModel.createOrUpdateCart(
-                                    item.productId,
-                                    item.productQun + 1,
-                                )
-                            },
-                            onDecrease = {
-                                cartViewModel.createOrUpdateCart(
-                                    item.productId,
-                                    item.productQun - 1
-                                )
-                            }
-                        )
+                if (cartItems.isEmpty()) {
+                    ErrorView("Your cart is empty")
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = PaddingValues(16.dp)
+                    ) {
+                        items(
+                            items = cartItems,
+                            key = { it.productId }
+                        ) { item ->
+                            ProductItemCard(
+                                itemName = item.productName,
+                                itemPrice = item.productPrice,
+                                itemDes = item.productDes,
+                                itemImg = item.productImg,
+                                quantity = item.productQun,
+                                onIncrease = {
+                                    cartViewModel.createOrUpdateCart(
+                                        item.productId,
+                                        item.productQun + 1
+                                    )
+                                },
+                                onDecrease = {
+                                    cartViewModel.createOrUpdateCart(
+                                        item.productId,
+                                        item.productQun - 1
+                                    )
+                                }
+                            )
+                        }
                     }
                 }
+            }
+            is CartState.Error -> {
+                ErrorView((viewState as CartState.Error).error)
             }
         }
     }
 }
-
 
 @Composable
 fun ProductItemCard(
@@ -186,13 +178,20 @@ fun ProductItemCard(
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onDecrease) {
-                    Icon(Icons.Default.Remove, contentDescription = "Decrease")
+                    Icon(
+                        Icons.Default.Remove,
+                        contentDescription = "Decrease"
+                    )
                 }
                 Text(quantity.toString(), style = MaterialTheme.typography.titleMedium)
                 IconButton(onClick = onIncrease) {
-                    Icon(Icons.Default.Add, contentDescription = "Increase")
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = "Increase"
+                    )
                 }
             }
         }
     }
 }
+

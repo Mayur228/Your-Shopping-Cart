@@ -1,7 +1,5 @@
 package com.demo.yourshoppingcart.framework.firebase
 
-import android.app.Activity
-import android.util.Log
 import com.demo.yourshoppingcart.FTAClass
 import com.demo.yourshoppingcart.cart.data.model.CartModel
 import com.demo.yourshoppingcart.common.network.DocumentApi
@@ -10,8 +8,10 @@ import com.demo.yourshoppingcart.product_details.data.model.ProductDetailsModel
 import com.demo.yourshoppingcart.user.data.model.USERTYPE
 import com.demo.yourshoppingcart.user.data.model.UserModel
 import com.google.firebase.FirebaseException
-import com.google.firebase.auth.*
-import com.google.firebase.firestore.FieldValue
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.PhoneAuthCredential
+import com.google.firebase.auth.PhoneAuthOptions
+import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await

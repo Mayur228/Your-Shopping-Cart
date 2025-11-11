@@ -24,92 +24,67 @@ class CartViewModel @Inject constructor(
     private val updateCartItemUseCase: UpdateCartUseCase,
     private val clearCart: ClearCartUseCase
 ) : ViewModel() {
-    private val _viewState = MutableStateFlow(CartState())
+
+    private val _viewState = MutableStateFlow<CartState>(CartState.Loading)
     val viewState: StateFlow<CartState> = _viewState
 
     init {
         loadCart()
     }
 
+    /** Load cart */
     fun loadCart() {
         viewModelScope.launch {
+            _viewState.value = CartState.Loading
             when (val result = getCartUseCase.invoke()) {
                 is Resource.Data<CartModel.Cart> -> {
-                    _viewState.value =
-                        _viewState.value.copy(isLoading = false, cartData = result.value)
+                    _viewState.value = CartState.Success(result.value)
                 }
-
                 is Resource.Error -> {
-                    _viewState.value = _viewState.value.copy(
-                        isLoading = false,
-                        errorMessage = result.throwable.message
-                    )
+                    _viewState.value = CartState.Error(result.throwable.message ?: "Failed to load cart")
                 }
             }
         }
     }
 
-    /** Add, update, or remove a single product */
+    /** Add / update / remove a single product */
     fun createOrUpdateCart(productId: String, quantity: Int, cartItem: cartItemEntity? = null) {
-        viewModelScope.launch {
-            val currentCart = _viewState.value.cartData
-            val newCartItem = currentCart?.cartItem?.toMutableList() ?: mutableListOf()
-            val index = newCartItem.indexOfFirst { it.productId == productId }
+        val currentCart = (_viewState.value as? CartState.Success)?.cartEntity
+            ?: cartEntity(cartId = UUID.randomUUID().toString(), cartItem = listOf(cartItem!!))
 
-            if (index == -1 && cartItem != null) {
-                newCartItem.add(cartItem)
-            } else if (index >= 0 && quantity > 0) {
-                newCartItem[index] = newCartItem[index].copy(productQun = quantity)
+        val updatedItems = currentCart.cartItem.toMutableList()
+        val index = updatedItems.indexOfFirst { it.productId == productId }
+
+        when {
+            index == -1 && cartItem != null -> updatedItems.add(cartItem)
+            index >= 0 && quantity > 0 -> updatedItems[index] = updatedItems[index].copy(productQun = quantity)
+            index >= 0 && quantity <= 0 -> updatedItems.removeAt(index)
+        }
+
+        val updatedCart = currentCart.copy(cartItem = updatedItems)
+        _viewState.value = CartState.Success(updatedCart)
+
+        viewModelScope.launch {
+            val result = if (updatedCart.cartId.isNotEmpty()) {
+                updateCartItemUseCase.invoke(updatedCart.cartId, updatedCart.cartItem)
             } else {
-                newCartItem.removeAt(index)
+                addCartUseCase.invoke(updatedCart)
             }
 
-            val finalData = currentCart?.copy(cartItem = newCartItem) ?: cartEntity(cartId = UUID.randomUUID().toString(),cartItem = newCartItem)
-
-            saveCart(finalData)
+            if (result is Resource.Error) {
+                _viewState.value = CartState.Error(result.throwable.message ?: "Failed to update cart")
+                loadCart()
+            }
         }
     }
 
-    /** Checkout (clear cart) */
+    /** Clear cart (checkout) */
     fun checkout() {
         viewModelScope.launch {
-            val result = clearCart.invoke()
-            when (result) {
-                is Resource.Data<*> -> {
-                    _viewState.value = _viewState.value.copy(isLoading = false, cartData = null)
-                }
-
-                is Resource.Error -> {
-                    _viewState.value = _viewState.value.copy(
-                        isLoading = false,
-                        errorMessage = result.throwable.message
-                    )
-                }
+            when (val result = clearCart.invoke()) {
+                is Resource.Data<*> -> _viewState.value = CartState.Success(cartEntity(cartId = "", cartItem = mutableListOf()))
+                is Resource.Error -> _viewState.value = CartState.Error(result.throwable.message ?: "Failed to clear cart")
             }
         }
-    }
-
-    /** Save cart to Firebase (handles new and existing carts) */
-    private suspend fun saveCart(cart: CartModel.Cart) {
-
-        val result = if (cart.cartId.isNotEmpty()) {
-            updateCartItemUseCase.invoke(cart.cartId, cart.cartItem)
-        } else {
-            addCartUseCase.invoke(cart)
-        }
-
-        _viewState.value = when (result) {
-            is Resource.Data<*> -> _viewState.value.copy(
-                isLoading = false,
-                cartData = cart,
-                errorMessage = null
-            )
-
-            is Resource.Error -> _viewState.value.copy(
-                isLoading = false,
-                errorMessage = result.throwable.message
-            )
-        }
-
     }
 }

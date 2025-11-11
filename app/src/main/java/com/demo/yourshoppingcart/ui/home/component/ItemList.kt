@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.demo.yourshoppingcart.cart.domain.entity.cartItemEntity
 import com.demo.yourshoppingcart.home.domain.entity.HomeEntity
+import com.demo.yourshoppingcart.ui.cart.CartState
 import com.demo.yourshoppingcart.ui.cart.CartViewModel
 
 @Composable
@@ -46,7 +47,7 @@ fun ItemList(
     cartViewModel: CartViewModel,
 ) {
     val cartState by cartViewModel.viewState.collectAsState()
-    val cartItems = cartState.cartData?.cartItem.orEmpty()
+    val cartItems = (cartState as CartState.Success).cartEntity.cartItem
 
     LazyColumn(
         modifier = Modifier.padding(8.dp),

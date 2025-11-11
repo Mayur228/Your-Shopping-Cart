@@ -2,9 +2,8 @@ package com.demo.yourshoppingcart
 
 import com.demo.yourshoppingcart.user.data.model.UserModel
 
-data class MainState(
-    val isLoading: Boolean = false,
-    val isDark: Boolean = false,
-    val user: UserModel.UserResponse? = null,
-    val errorMessage: String? = null
-)
+sealed class MainState {
+    object Loading: MainState()
+    data class Success(val isDark: Boolean,val user: UserModel.UserResponse?): MainState()
+    data class Error(val error: String): MainState()
+}

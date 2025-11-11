@@ -8,98 +8,92 @@ import com.demo.yourshoppingcart.home.domain.usecase.GetAllItemUseCase
 import com.demo.yourshoppingcart.home.domain.usecase.GetCategoryUseCase
 import com.demo.yourshoppingcart.home.domain.usecase.GetSelectedCategoryItemUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    val getCategoryUseCase: GetCategoryUseCase,
-    val getAllItemUseCase: GetAllItemUseCase,
-    val getSelectedCategoryItemUseCase: GetSelectedCategoryItemUseCase,
+    private val getCategoryUseCase: GetCategoryUseCase,
+    private val getAllItemUseCase: GetAllItemUseCase,
+    private val getSelectedCategoryItemUseCase: GetSelectedCategoryItemUseCase
 ) : ViewModel() {
 
-    private val _viewState = MutableStateFlow(HomeViewState())
+    private val _viewState = MutableStateFlow<HomeViewState>(HomeViewState.Loading)
     val viewState: StateFlow<HomeViewState> = _viewState
 
+    private val _viewEvent = MutableSharedFlow<HomeEvent>()
+    val viewEvent: SharedFlow<HomeEvent> = _viewEvent
+
     init {
-        getAllCategory()
-        getAllItem()
+        onEvent(HomeEvent.LoadHomeData)
     }
-
-    fun getAllCategory() {
+    fun onEvent(event: HomeEvent) {
         viewModelScope.launch {
-            _viewState.value = _viewState.value.copy(isLoading = true)
-
-            val result = getCategoryUseCase()
-
-            when (result) {
-                is Resource.Data<*> -> {
-                    val categoryResponse = result.value as HomeEntity.CategoryResponseEntity
-                    _viewState.value = _viewState.value.copy(
-                        isLoading = false,
-                        categories = categoryResponse.categoryList,
-                        errorMessage = null
-                    )
-                }
-
-                is Resource.Error -> {
-                    _viewState.value = _viewState.value.copy(
-                        isLoading = false,
-                        errorMessage = result.throwable.message
-                    )
-                }
+            when(event) {
+                HomeEvent.LoadHomeData -> _viewEvent.emit(event)
+                is HomeEvent.SelectCategory -> _viewEvent.emit(event)
+                is HomeEvent.NavigateToProductDetails -> _viewEvent.emit(event)
+                HomeEvent.NavigateToCart -> _viewEvent.emit(event)
+                is HomeEvent.ToggleChange -> _viewEvent.emit(event)
             }
         }
     }
 
-    fun getAllItem() {
+    fun loadData() {
         viewModelScope.launch {
-            _viewState.value = _viewState.value.copy(isItemLoading = true)
+            _viewState.value = HomeViewState.Loading
 
-            val result = getAllItemUseCase()
-            when (result) {
-                is Resource.Data<*> -> {
-                    val itemResponse = result.value as HomeEntity.CategoryItemResponseEntity
-                    _viewState.value = _viewState.value.copy(
-                        isItemLoading = false,
-                        items = itemResponse.itemList,
-                        errorMessage = null
-                    )
-                }
+            val categoryResult = getCategoryUseCase()
+            val itemResult = getAllItemUseCase()
 
-                is Resource.Error -> {
-                    _viewState.value = _viewState.value.copy(
-                        isItemLoading = false,
-                        errorMessage = result.throwable.message
-                    )
-                }
+            if (categoryResult is Resource.Data<*> && itemResult is Resource.Data<*>) {
+                val categories =
+                    (categoryResult.value as HomeEntity.CategoryResponseEntity).categoryList
+                val items =
+                    (itemResult.value as HomeEntity.CategoryItemResponseEntity).itemList
+
+                _viewState.value = HomeViewState.Success(
+                    categories = categories,
+                    items = items,
+                    isLoading = false
+                )
+            } else {
+                val errorMessage = (categoryResult as? Resource.Error)?.throwable?.message
+                    ?: (itemResult as? Resource.Error)?.throwable?.message
+                    ?: "Something went wrong"
+                _viewState.value = HomeViewState.Error(errorMessage)
             }
         }
     }
 
     fun getSelectedCatItem(category: String) {
         viewModelScope.launch {
-            _viewState.value = _viewState.value.copy(isItemLoading = true)
-            val result = getSelectedCategoryItemUseCase(catId = category)
-            when (result) {
-                is Resource.Data<*> -> {
-                    val itemResponse = result.value as HomeEntity.CategoryItemResponseEntity
-                    _viewState.value = _viewState.value.copy(
-                        isItemLoading = false,
-                        items = itemResponse.itemList,
-                        errorMessage = null
-                    )
-                }
+            val currentState = viewState.value
+            val currentCategories = (currentState as? HomeViewState.Success)?.categories.orEmpty()
 
-                is Resource.Error -> {
-                    _viewState.value = _viewState.value.copy(
-                        isItemLoading = false,
-                        errorMessage = result.throwable.message
-                    )
-                }
+            _viewState.value = HomeViewState.Success(
+                categories = currentCategories,
+                items = emptyList(),
+                isLoading = true
+            )
+
+            val result = getSelectedCategoryItemUseCase(catId = category)
+            if (result is Resource.Data<*>) {
+                val items = (result.value as HomeEntity.CategoryItemResponseEntity).itemList
+                _viewState.value = HomeViewState.Success(
+                    categories = currentCategories,
+                    items = items,
+                    isLoading = false
+                )
+            } else {
+                val errorMessage = (result as? Resource.Error)?.throwable?.message ?: "Failed to load items"
+                _viewState.value = HomeViewState.Error(errorMessage)
             }
         }
     }
+
 }
