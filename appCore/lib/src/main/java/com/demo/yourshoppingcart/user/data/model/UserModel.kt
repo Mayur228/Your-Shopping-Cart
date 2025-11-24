@@ -1,6 +1,7 @@
 package com.demo.yourshoppingcart.user.data.model
 
 import com.demo.yourshoppingcart.cart.data.model.CartModel
+import com.demo.yourshoppingcart.payment.data.model.PaymentModel
 
 abstract class UserModel {
     data class UserResponse(
@@ -8,7 +9,9 @@ abstract class UserModel {
         val userNum: String = "",
         val userType: USERTYPE = USERTYPE.GUEST,
         val isLogin: Boolean = false,
-        val cart: CartModel.Cart? = null
+        val cart: CartModel.Cart? = null,
+        val paymentMethods: List<PaymentModel> = emptyList(),
+        val selectedPaymentMethod: String = ""
     )
    /* data class UserCart(
         val cartId: String,

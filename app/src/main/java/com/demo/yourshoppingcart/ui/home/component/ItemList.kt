@@ -47,7 +47,11 @@ fun ItemList(
     cartViewModel: CartViewModel,
 ) {
     val cartState by cartViewModel.viewState.collectAsState()
-    val cartItems = (cartState as CartState.Success).cartEntity.cartItem
+    val cartItems = if(cartState is CartState.Success) {
+        (cartState as CartState.Success).cartEntity.cartItem
+    }else{
+        null
+    }
 
     LazyColumn(
         modifier = Modifier.padding(8.dp),
@@ -56,7 +60,7 @@ fun ItemList(
         items(
             items = items,
         ) { item ->
-            val quantity = cartItems.find { it.productId == item.id }?.productQun ?: 0
+            val quantity = cartItems?.find { it.productId == item.id }?.productQun ?: 0
 
             Card(
                 modifier = Modifier

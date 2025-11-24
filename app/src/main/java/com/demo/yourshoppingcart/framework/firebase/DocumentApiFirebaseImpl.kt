@@ -4,6 +4,7 @@ import com.demo.yourshoppingcart.FTAClass
 import com.demo.yourshoppingcart.cart.data.model.CartModel
 import com.demo.yourshoppingcart.common.network.DocumentApi
 import com.demo.yourshoppingcart.home.data.model.HomeModel
+import com.demo.yourshoppingcart.payment.data.model.PaymentModel
 import com.demo.yourshoppingcart.product_details.data.model.ProductDetailsModel
 import com.demo.yourshoppingcart.user.data.model.USERTYPE
 import com.demo.yourshoppingcart.user.data.model.UserModel
@@ -12,6 +13,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FieldValue.arrayRemove
+import com.google.firebase.firestore.FieldValue.arrayUnion
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
@@ -171,7 +175,30 @@ class DocumentApiFirebaseImpl @Inject constructor(
     override suspend fun fetchUser(): UserModel.UserResponse {
         val userId = auth.currentUser?.uid ?: throw Exception("User not logged in")
         val document = firestore.collection("user").document(userId).get().await()
-        return document.toObject(UserModel.UserResponse::class.java) ?: throw Exception("User not found")
+
+        if (!document.exists()) throw Exception("User not found")
+
+        val userNum = document.getString("userNum") ?: ""
+        val userType = document.getString("userType")?.let { USERTYPE.valueOf(it) } ?: USERTYPE.GUEST
+        val isLogin = document.getBoolean("isLogin") ?: false
+        val selectedPaymentMethod = document.getString("selectedPaymentMethod") ?: PaymentModel.COD.id
+
+
+        val cart = document.get("cart")?.let { CartModel.Cart.fromMap(it as Map<String, Any>) }
+
+        val paymentList = document.get("paymentMethods") as? List<Map<String, Any>> ?: emptyList()
+        val paymentMethods = paymentList.mapNotNull { PaymentModel.fromMap(it) }
+
+
+        return UserModel.UserResponse(
+            userId = userId,
+            userNum = userNum,
+            userType = userType,
+            isLogin = isLogin,
+            cart = cart,
+            paymentMethods = paymentMethods,
+            selectedPaymentMethod = selectedPaymentMethod
+        )
     }
 
     override suspend fun guestLogin(): String {
@@ -182,7 +209,9 @@ class DocumentApiFirebaseImpl @Inject constructor(
             "userType" to USERTYPE.GUEST.name,
             "userNum" to "",
             "isLogin" to true,
-            "cart" to null
+            "cart" to null,
+            "paymentMethod" to null,
+            "selectedPaymentMethod" to PaymentModel.COD.id
         )
         firestore.collection("user").document(uid).set(userData).await()
         return uid
@@ -210,7 +239,9 @@ class DocumentApiFirebaseImpl @Inject constructor(
             "userNum" to user.userNum,
             "userType" to USERTYPE.LOGGED.name,
             "isLogin" to true,
-            "cart" to (cartData ?: user.cart)
+            "cart" to (cartData ?: user.cart),
+            "paymentMethod" to null,
+            "selectedPaymentMethod" to PaymentModel.COD.id
         )
 
         firestore.collection("user").document(uid).set(userData).await()
@@ -240,4 +271,66 @@ class DocumentApiFirebaseImpl @Inject constructor(
             PhoneAuthProvider.verifyPhoneNumber(options)
         }
     }
+
+    override suspend fun addPaymentMethod(method: PaymentModel): String {
+        val userId = auth.currentUser?.uid ?: throw Exception("User not authenticated")
+        val userRef = firestore.collection("user").document(userId)
+
+        userRef.update("paymentMethods", FieldValue.arrayUnion(method)).await()
+        return "Payment method added successfully"
+    }
+
+    override suspend fun getPaymentMethod(): List<PaymentModel> {
+        val userId = auth.currentUser?.uid ?: throw Exception("User not authenticated")
+        val document = firestore.collection("user").document(userId).get().await()
+
+        val paymentList = document.get("paymentMethods") as? List<Map<String, Any>> ?: emptyList()
+        return paymentList.mapNotNull { PaymentModel.fromMap(it) }
+    }
+
+    override suspend fun updatePaymentMethod(paymentMethodId: String, updatedMethod: PaymentModel): String {
+        val userId = auth.currentUser?.uid ?: throw Exception("User not authenticated")
+        val userRef = firestore.collection("user").document(userId)
+
+        val currentMethods = getPaymentMethod()
+        val oldMethod = currentMethods.find { it.id == paymentMethodId }
+            ?: throw Exception("Payment method not found")
+
+        userRef.update("paymentMethods", arrayRemove(oldMethod)).await()
+
+        val newMethod = when (updatedMethod) {
+            is PaymentModel.COD -> PaymentModel.COD
+            is PaymentModel.Upi -> updatedMethod.copy(id = paymentMethodId)
+            is PaymentModel.Card -> updatedMethod.copy(id = paymentMethodId)
+        }
+
+        userRef.update("paymentMethods", arrayUnion(newMethod)).await()
+        return "Payment method updated successfully"
+    }
+
+    override suspend fun deletePaymentMethod(paymentMethodId: String): String {
+        val userId = auth.currentUser?.uid ?: throw Exception("User not authenticated")
+        val userRef = firestore.collection("user").document(userId)
+
+        val currentMethods = getPaymentMethod()
+        val methodToDelete = currentMethods.find { it.id == paymentMethodId }
+            ?: throw Exception("Payment method not found")
+
+        userRef.update("paymentMethods", arrayRemove(methodToDelete)).await()
+        return "Payment method deleted successfully"
+    }
+
+    override suspend fun selectedPaymentMethod(id: String) {
+        val uid = auth.currentUser?.uid ?: throw Exception("User not logged in")
+        firestore.collection("user").document(uid)
+            .update("selectedPaymentMethod", id)
+            .await()
+    }
+
+    override suspend fun getSelectedPaymentMethod(): String {
+        val uid = auth.currentUser?.uid ?: throw Exception("User not logged in")
+        val doc = firestore.collection("user").document(uid).get().await()
+        return doc.getString("selectedPaymentMethod") ?: PaymentModel.COD.id
+    }
+
 }

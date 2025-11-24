@@ -34,7 +34,7 @@ class HomeViewModel @Inject constructor(
     fun onEvent(event: HomeEvent) {
         viewModelScope.launch {
             when(event) {
-                HomeEvent.LoadHomeData -> _viewEvent.emit(event)
+                HomeEvent.LoadHomeData -> loadData()
                 is HomeEvent.SelectCategory -> _viewEvent.emit(event)
                 is HomeEvent.NavigateToProductDetails -> _viewEvent.emit(event)
                 HomeEvent.NavigateToCart -> _viewEvent.emit(event)

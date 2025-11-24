@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Remove
@@ -48,7 +49,8 @@ fun CartScreen(
     onBackClick: () -> Unit,
     cartViewModel: CartViewModel,
     isPhoneLogin: Boolean,
-    navigateToPhoneLogin: () -> Unit
+    navigateToPhoneLogin: () -> Unit,
+    navigateToCheckoutScreen: () -> Unit
 ) {
     val viewState by cartViewModel.viewState.collectAsState()
 
@@ -58,20 +60,20 @@ fun CartScreen(
                 title = { Text("Your Cart") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
         },
         bottomBar = {
-            val totalPrice = (viewState as CartState.Success).cartEntity.cartItem?.sumOf {
+            val totalPrice = (viewState as CartState.Success).cartEntity.cartItem.sumOf {
                 it.productQun * (it.productPrice.toIntOrNull() ?: 0)
-            } ?: 0
+            }
 
             if (totalPrice > 0) {
                 Button(
                     onClick = {
-                        if (isPhoneLogin) cartViewModel.checkout()
+                        if (isPhoneLogin) navigateToCheckoutScreen()
                         else navigateToPhoneLogin()
                     },
                     shape = RoundedCornerShape(50),

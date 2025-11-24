@@ -1,6 +1,7 @@
 package com.demo.yourshoppingcart.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -8,7 +9,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.demo.yourshoppingcart.ui.cart.CartScreen
+import com.demo.yourshoppingcart.ui.cart.CartState
 import com.demo.yourshoppingcart.ui.cart.CartViewModel
+import com.demo.yourshoppingcart.ui.checkout.CheckoutScreen
 import com.demo.yourshoppingcart.ui.home.HomeScreen
 import com.demo.yourshoppingcart.ui.login.PhoneLoginScreen
 import com.demo.yourshoppingcart.ui.product_details.ProductDetailsScreen
@@ -61,9 +64,12 @@ fun AppNavHost(
             CartScreen(
                 onBackClick = { navController.popBackStack() },
                 cartViewModel = cartViewModel,
-                isPhoneLogin = user?.userType == USERTYPE.LOGGED,
+                isPhoneLogin = true,//user?.userType == USERTYPE.LOGGED,
                 navigateToPhoneLogin = {
                     navController.navigate(NavRoutes.PHONE_LOGIN)
+                },
+                navigateToCheckoutScreen = {
+                    navController.navigate(NavRoutes.CHECKOUT)
                 }
             )
         }
@@ -72,6 +78,18 @@ fun AppNavHost(
             PhoneLoginScreen(
                 onLoginSuccess = {
                     navController.popBackStack()
+                }
+            )
+        }
+
+        composable(route = NavRoutes.CHECKOUT) {
+            CheckoutScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                viewModel = cartViewModel,
+                onPlaceOrder = {
+                    cartViewModel.checkout()
                 }
             )
         }

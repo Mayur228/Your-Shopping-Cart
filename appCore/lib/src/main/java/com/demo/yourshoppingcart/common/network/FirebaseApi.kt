@@ -2,6 +2,7 @@ package com.demo.yourshoppingcart.common.network
 
 import com.demo.yourshoppingcart.cart.data.model.CartModel
 import com.demo.yourshoppingcart.home.data.model.HomeModel
+import com.demo.yourshoppingcart.payment.data.model.PaymentModel
 import com.demo.yourshoppingcart.product_details.data.model.ProductDetailsModel
 import com.demo.yourshoppingcart.user.data.model.UserModel
 import kotlinx.coroutines.flow.Flow
@@ -19,5 +20,10 @@ interface DocumentApi {
     suspend fun guestLogin(): String
     suspend fun phoneLogin(oldGuestId: String? = null, user: UserModel.UserResponse, verificationId: String? = null, otp: String? = null): String
     suspend fun sendOtpFlow(phoneNumber: String): String
-
+    suspend fun addPaymentMethod(method: PaymentModel): String
+    suspend fun getPaymentMethod(): List<PaymentModel>
+    suspend fun updatePaymentMethod(paymentMethodId: String, updatedMethod: PaymentModel): String
+    suspend fun deletePaymentMethod(paymentMethodId: String): String
+    suspend fun selectedPaymentMethod(id: String): Unit
+    suspend fun getSelectedPaymentMethod(): String
 }
