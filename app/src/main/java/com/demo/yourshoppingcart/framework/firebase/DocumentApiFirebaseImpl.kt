@@ -3,6 +3,7 @@ package com.demo.yourshoppingcart.framework.firebase
 import com.demo.yourshoppingcart.FTAClass
 import com.demo.yourshoppingcart.cart.data.model.CartModel
 import com.demo.yourshoppingcart.common.network.DocumentApi
+import com.demo.yourshoppingcart.coupon.data.model.Coupon
 import com.demo.yourshoppingcart.home.data.model.HomeModel
 import com.demo.yourshoppingcart.payment.data.model.PaymentModel
 import com.demo.yourshoppingcart.product_details.data.model.ProductDetailsModel
@@ -13,12 +14,13 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
-import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FieldValue.arrayRemove
 import com.google.firebase.firestore.FieldValue.arrayUnion
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.getField
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlin.coroutines.resume
@@ -189,7 +191,6 @@ class DocumentApiFirebaseImpl @Inject constructor(
         val paymentList = document.get("paymentMethods") as? List<Map<String, Any>> ?: emptyList()
         val paymentMethods = paymentList.mapNotNull { PaymentModel.fromMap(it) }
 
-
         return UserModel.UserResponse(
             userId = userId,
             userNum = userNum,
@@ -276,7 +277,7 @@ class DocumentApiFirebaseImpl @Inject constructor(
         val userId = auth.currentUser?.uid ?: throw Exception("User not authenticated")
         val userRef = firestore.collection("user").document(userId)
 
-        userRef.update("paymentMethods", FieldValue.arrayUnion(method)).await()
+        userRef.update("paymentMethods", arrayUnion(method)).await()
         return "Payment method added successfully"
     }
 
@@ -331,6 +332,65 @@ class DocumentApiFirebaseImpl @Inject constructor(
         val uid = auth.currentUser?.uid ?: throw Exception("User not logged in")
         val doc = firestore.collection("user").document(uid).get().await()
         return doc.getString("selectedPaymentMethod") ?: PaymentModel.COD.id
+    }
+
+    override suspend fun getCoupons(): List<Coupon> {
+        val collection = firestore.collection("coupons").get().await()
+        val coupons = collection.documents.map { doc ->
+            Coupon(
+                id = doc.id,
+                code = doc.getString("code") ?: "",
+                description = doc.getString("description") ?: "",
+                discountAmount = doc.getField("discountAmount") ?: 0,
+                discountPercent = doc.getField("discountPercent") ?: 0,
+                expiryDate = doc.getString("expiryDate") ?: "",
+                isApplied = doc.getField("applied") ?: false
+            )
+        }
+        return coupons
+    }
+
+    override suspend fun applyCoupon(id: String) {
+        val allCoupons = firestore.collection("coupons").get().await()
+        allCoupons.documents.forEach { doc ->
+            if (doc.getBoolean("applied") == true && doc.id != id) {
+                doc.reference.update("applied", false).await()
+            }
+        }
+
+        firestore.collection("coupons")
+            .document(id)
+            .update("applied", true)
+            .await()
+    }
+
+    override suspend fun removeCoupon(id: String) {
+        firestore.collection("coupons")
+            .document(id)
+            .update("applied", false)
+            .await()
+    }
+
+    override suspend fun uploadDataToFirestore() {
+        val coupons = listOf(
+            Coupon(code = "FLAT50", description = "Get ₹50 off on your order", discountAmount = 50, discountPercent =  0, expiryDate =  "2025-12-31", isApplied = false),
+            Coupon(code = "SAVE10", description = "Save 10% on your order", discountAmount =  0, discountPercent = 10, expiryDate =  "2025-12-31", isApplied = false),
+            Coupon(code = "WELCOME100", description = "Get ₹100 off on first order", discountAmount =  100, discountPercent = 0, expiryDate =  "2026-03-31", isApplied = false),
+            Coupon(code = "FESTIVE20", description = "Get 20% off during festive season", discountAmount = 0, discountPercent = 20, expiryDate =  "2025-12-31", isApplied = false),
+            Coupon(code = "FREESHIP", description =  "Free delivery on this order", discountAmount = 40, discountPercent = 0, expiryDate =  "2025-12-31", isApplied = false)
+        )
+
+        for (coupon in coupons) {
+            firestore.collection("coupons")
+                .document()
+                .set(coupon)
+                .addOnSuccessListener {
+                    println("Coupon ${coupon.code} added")
+                }
+                .addOnFailureListener { e ->
+                    println("Error adding coupon ${coupon.code}: $e")
+                }
+        }
     }
 
 }

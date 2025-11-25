@@ -8,6 +8,7 @@ object NavRoutes {
     const val CART = "cart"
     const val PHONE_LOGIN = "phone_login"
     const val CHECKOUT = "checkout"
+    const val COUPON = "coupon"
 
 
     fun productDetails(itemId: String) = "$PRODUCT_DETAILS/$itemId"

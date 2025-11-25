@@ -1,6 +1,7 @@
 package com.demo.yourshoppingcart.common.network
 
 import com.demo.yourshoppingcart.cart.data.model.CartModel
+import com.demo.yourshoppingcart.coupon.data.model.Coupon
 import com.demo.yourshoppingcart.home.data.model.HomeModel
 import com.demo.yourshoppingcart.payment.data.model.PaymentModel
 import com.demo.yourshoppingcart.product_details.data.model.ProductDetailsModel
@@ -26,4 +27,8 @@ interface DocumentApi {
     suspend fun deletePaymentMethod(paymentMethodId: String): String
     suspend fun selectedPaymentMethod(id: String): Unit
     suspend fun getSelectedPaymentMethod(): String
+    suspend fun uploadDataToFirestore() //Use only for data upload when need to avoid manual data addition
+    suspend fun getCoupons(): List<Coupon>
+    suspend fun applyCoupon(id: String)
+    suspend fun removeCoupon(id: String)
 }

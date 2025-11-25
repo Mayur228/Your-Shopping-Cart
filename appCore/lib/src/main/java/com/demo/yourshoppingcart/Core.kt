@@ -15,6 +15,9 @@ import com.demo.yourshoppingcart.user.domain.usecase.GuestLoginUseCase
 import com.demo.yourshoppingcart.user.domain.usecase.PhoneLoginUseCase
 import com.demo.yourshoppingcart.user.domain.usecase.SendOtpUseCase
 import com.demo.yourshoppingcart.cart.domain.usecase.UpdateCartUseCase
+import com.demo.yourshoppingcart.coupon.domain.usecase.ApplyCouponUseCase
+import com.demo.yourshoppingcart.coupon.domain.usecase.GetCouponsUseCase
+import com.demo.yourshoppingcart.coupon.domain.usecase.RemoveCouponUseCase
 import com.demo.yourshoppingcart.payment.domain.usecase.AddPaymentMethodUseCase
 import com.demo.yourshoppingcart.payment.domain.usecase.DeletePaymentMethodUseCase
 import com.demo.yourshoppingcart.payment.domain.usecase.GetPaymentMethodUseCase
@@ -113,6 +116,17 @@ object Core {
             get() = get().get()
 
         val getSelectedPaymentMethodUseCase: GetSelectedPaymentMethodUseCase
+            get() = get().get()
+    }
+
+    object Coupons{
+        val getCouponsUseCase: GetCouponsUseCase
+            get() = get().get()
+
+        val applyCouponUseCase: ApplyCouponUseCase
+            get() = get().get()
+
+        val removeCouponUseCase: RemoveCouponUseCase
             get() = get().get()
     }
 }
