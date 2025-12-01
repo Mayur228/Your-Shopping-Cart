@@ -38,6 +38,7 @@ import com.demo.yourshoppingcart.common.LoadingView
 import com.demo.yourshoppingcart.payment.data.model.PaymentModel
 import com.demo.yourshoppingcart.ui.cart.CartState
 import com.demo.yourshoppingcart.ui.cart.CartViewModel
+import com.demo.yourshoppingcart.ui.cart.CheckoutState
 import com.demo.yourshoppingcart.ui.checkout.components.AddNewOptionCard
 import com.demo.yourshoppingcart.ui.checkout.components.AppliedCouponCard
 import com.demo.yourshoppingcart.ui.checkout.components.PaymentOptionItem

@@ -24,6 +24,11 @@ import com.demo.yourshoppingcart.payment.domain.usecase.GetPaymentMethodUseCase
 import com.demo.yourshoppingcart.payment.domain.usecase.GetSelectedPaymentMethodUseCase
 import com.demo.yourshoppingcart.payment.domain.usecase.SelectedPaymentMethodUseCase
 import com.demo.yourshoppingcart.payment.domain.usecase.UpdatePaymentMethodUseCase
+import com.demo.yourshoppingcart.user.domain.usecase.AddAddressUseCase
+import com.demo.yourshoppingcart.user.domain.usecase.CheckUserUseCase
+import com.demo.yourshoppingcart.user.domain.usecase.DeleteAddressUseCase
+import com.demo.yourshoppingcart.user.domain.usecase.UpdateAddressUseCase
+import com.demo.yourshoppingcart.user.domain.usecase.UpdateUserUseCase
 import org.koin.core.context.GlobalContext.get
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
@@ -70,7 +75,21 @@ object Core {
     }
 
     object User {
+        val checkUserUseCase: CheckUserUseCase
+            get() = get().get()
         val getUserUseCase: GetUserUseCase
+            get() = get().get()
+
+        val updateUserUseCase: UpdateUserUseCase
+            get() = get().get()
+
+        val addAddressUseCase: AddAddressUseCase
+            get() = get().get()
+
+        val updateAddressUseCase: UpdateAddressUseCase
+            get() = get().get()
+
+        val deleteAddressUseCase: DeleteAddressUseCase
             get() = get().get()
     }
 

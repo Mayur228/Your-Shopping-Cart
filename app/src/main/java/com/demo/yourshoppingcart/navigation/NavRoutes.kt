@@ -1,16 +1,19 @@
 package com.demo.yourshoppingcart.navigation
 
-import com.demo.yourshoppingcart.user.domain.entity.cartEntity
+sealed class NavRoutes(
+    val route: String,
+    val title: String? = null,
+) {
+    data object Home : NavRoutes("home", "Home")
+    data object Cart : NavRoutes("cart", "My Cart")
+    data object Coupons : NavRoutes("coupons", "Coupons")
+    data object Orders : NavRoutes("orders", "My Orders")
+    data object Profile : NavRoutes("profile", "Profile")
 
-object NavRoutes {
-    const val HOME = "home"
-    const val PRODUCT_DETAILS = "product_details"
-    const val CART = "cart"
-    const val PHONE_LOGIN = "phone_login"
-    const val CHECKOUT = "checkout"
-    const val COUPON = "coupon"
+    data object Checkout : NavRoutes("checkout", "CheckOut")
+    data object PhoneLogin : NavRoutes("phone_login", "Phone Login")
 
-
-    fun productDetails(itemId: String) = "$PRODUCT_DETAILS/$itemId"
-    fun cartScreen(cartId: String?) = "$CART/$cartId"
+    data object ProductDetails : NavRoutes("product_details/{id}", null) {
+        fun route(id: String) = "product_details/$id"
+    }
 }

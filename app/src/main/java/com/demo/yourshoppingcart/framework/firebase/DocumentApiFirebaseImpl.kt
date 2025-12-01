@@ -7,6 +7,8 @@ import com.demo.yourshoppingcart.coupon.data.model.Coupon
 import com.demo.yourshoppingcart.home.data.model.HomeModel
 import com.demo.yourshoppingcart.payment.data.model.PaymentModel
 import com.demo.yourshoppingcart.product_details.data.model.ProductDetailsModel
+import com.demo.yourshoppingcart.user.data.model.AddressModel
+import com.demo.yourshoppingcart.user.data.model.AddressType
 import com.demo.yourshoppingcart.user.data.model.USERTYPE
 import com.demo.yourshoppingcart.user.data.model.UserModel
 import com.google.firebase.FirebaseException
@@ -174,33 +176,134 @@ class DocumentApiFirebaseImpl @Inject constructor(
         firestore.collection("user").document(uid).update("cart", emptyMap<String, Any>()).await()
     }
 
+    override suspend fun isNewUser(): Boolean {
+        val userId = auth.currentUser?.uid ?: throw Exception("User not logged in")
+        val document = firestore.collection("user").document(userId).get().await()
+        if (!document.exists()) throw Exception("User not found")
+        val userType = document.getString("userType")?.let { USERTYPE.valueOf(it) } ?: USERTYPE.GUEST
+
+
+        return !(userType == USERTYPE.GUEST || userType == USERTYPE.LOGGED)
+    }
+
     override suspend fun fetchUser(): UserModel.UserResponse {
         val userId = auth.currentUser?.uid ?: throw Exception("User not logged in")
         val document = firestore.collection("user").document(userId).get().await()
 
         if (!document.exists()) throw Exception("User not found")
 
+        val userName = document.getString("userName") ?: ""
+        val userPP = document.getString("userPP") ?: ""
         val userNum = document.getString("userNum") ?: ""
         val userType = document.getString("userType")?.let { USERTYPE.valueOf(it) } ?: USERTYPE.GUEST
         val isLogin = document.getBoolean("isLogin") ?: false
         val selectedPaymentMethod = document.getString("selectedPaymentMethod") ?: PaymentModel.COD.id
-
 
         val cart = document.get("cart")?.let { CartModel.Cart.fromMap(it as Map<String, Any>) }
 
         val paymentList = document.get("paymentMethods") as? List<Map<String, Any>> ?: emptyList()
         val paymentMethods = paymentList.mapNotNull { PaymentModel.fromMap(it) }
 
+        val addressList = document.get("address") as? List<Map<String, Any>> ?: emptyList()
+
+        val addresses = addressList.map { map ->
+            AddressModel(
+                id = map["id"] as? String ?: "",
+                name = map["name"] as? String ?: "",
+                phone = map["phone"] as? String ?: "",
+                pinCode = map["pinCode"] as? String ?: "",
+                fullAddress = map["fullAddress"] as? String ?: "",
+                city = map["city"] as? String ?: "",
+                state = map["state"] as? String ?: "",
+                type = (map["type"] as? String) ?: AddressType.HOME.name
+            )
+        }
+
         return UserModel.UserResponse(
             userId = userId,
+            userName = userName,
+            userPP = userPP,
             userNum = userNum,
             userType = userType,
             isLogin = isLogin,
             cart = cart,
             paymentMethods = paymentMethods,
-            selectedPaymentMethod = selectedPaymentMethod
+            selectedPaymentMethod = selectedPaymentMethod,
+            address = addresses
         )
     }
+
+    override suspend fun updateUser(userId: String, user: UserModel.UserResponse) {
+
+        val paymentMethodsList = user.paymentMethods.map { payment ->
+
+            when (payment) {
+
+                is PaymentModel.Card -> mapOf(
+                    "id" to payment.id,
+                    "type" to "card",
+                    "cardNumber" to payment.cardNumber,
+                    "expiry" to payment.expiryDate,
+                    "holderName" to payment.cardHolderName
+                )
+
+                is PaymentModel.Upi -> mapOf(
+                    "id" to payment.id,
+                    "type" to "upi",
+                    "upiId" to payment.upiId
+                )
+
+                else -> emptyMap()
+            }
+        }
+
+        val addressList = user.address.map { addr ->
+            mapOf(
+                "id" to addr.id,
+                "name" to addr.name,
+                "phone" to addr.phone,
+                "pinCode" to addr.pinCode,
+                "fullAddress" to addr.fullAddress,
+                "city" to addr.city,
+                "state" to addr.state,
+                "type" to addr.type
+            )
+        }
+
+        val cartMap = user.cart?.let { cart ->
+            mapOf(
+                "cartItem" to cart.cartItem.map { item ->
+                    mapOf(
+                        "productId" to item.productId,
+                        "productName" to item.productName,
+                        "productDes" to item.productDes,
+                        "productPrice" to item.productPrice,
+                        "productImg" to item.productImg,
+                        "productQun" to item.productQun
+                    )
+                }
+            )
+        }
+
+        val userMap = mapOf(
+            "userId" to user.userId,
+            "userName" to user.userName,
+            "userPP" to user.userPP,
+            "userNum" to user.userNum,
+            "userType" to user.userType.name,
+            "isLogin" to user.isLogin,
+            "selectedPaymentMethod" to user.selectedPaymentMethod,
+            "cart" to cartMap,
+            "paymentMethods" to paymentMethodsList,
+            "address" to addressList
+        )
+
+        firestore.collection("user")
+            .document(userId)
+            .update(userMap)
+            .await()
+    }
+
 
     override suspend fun guestLogin(): String {
         val authResult = auth.signInAnonymously().await()
@@ -208,11 +311,14 @@ class DocumentApiFirebaseImpl @Inject constructor(
         val userData = hashMapOf(
             "userId" to uid,
             "userType" to USERTYPE.GUEST.name,
+            "userName" to "Guest User",
+            "userPP" to "",
             "userNum" to "",
             "isLogin" to true,
             "cart" to null,
             "paymentMethod" to null,
-            "selectedPaymentMethod" to PaymentModel.COD.id
+            "selectedPaymentMethod" to PaymentModel.COD.id,
+            "address" to emptyList<AddressModel>()
         )
         firestore.collection("user").document(uid).set(userData).await()
         return uid
@@ -237,12 +343,15 @@ class DocumentApiFirebaseImpl @Inject constructor(
 
         val userData = hashMapOf(
             "userId" to uid,
+            "userName" to user.userName,
+            "userPP" to user.userPP,
             "userNum" to user.userNum,
             "userType" to USERTYPE.LOGGED.name,
             "isLogin" to true,
             "cart" to (cartData ?: user.cart),
             "paymentMethod" to null,
-            "selectedPaymentMethod" to PaymentModel.COD.id
+            "selectedPaymentMethod" to PaymentModel.COD.id,
+            "address" to user.address
         )
 
         firestore.collection("user").document(uid).set(userData).await()
@@ -370,6 +479,51 @@ class DocumentApiFirebaseImpl @Inject constructor(
             .update("applied", false)
             .await()
     }
+
+    override suspend fun addAddress(address: AddressModel) {
+        val uid = auth.currentUser?.uid ?: throw Exception("User not logged in")
+        val userRef = firestore.collection("user").document(uid)
+
+        userRef.update("address", arrayUnion(address)).await()
+    }
+
+    override suspend fun updateAddress(id: String, address: AddressModel) {
+        val uid = auth.currentUser?.uid ?: throw Exception("User not logged in")
+        val userRef = firestore.collection("user").document(uid)
+
+        val document = userRef.get().await()
+        val addressList = document.get("address") as? List<Map<String, Any>> ?: emptyList()
+
+        val updatedList = addressList.map {
+            if (it["id"] == id) {
+                hashMapOf(
+                    "id" to address.id,
+                    "name" to address.name,
+                    "phone" to address.phone,
+                    "pinCode" to address.pinCode,
+                    "fullAddress" to address.fullAddress,
+                    "city" to address.city,
+                    "state" to address.state,
+                    "type" to address.type
+                )
+            } else it
+        }
+
+        userRef.update("address", updatedList).await()
+    }
+
+    override suspend fun deleteAddress(id: String) {
+        val uid = auth.currentUser?.uid ?: throw Exception("User not logged in")
+        val userRef = firestore.collection("user").document(uid)
+
+        val document = userRef.get().await()
+        val addressList = document.get("address") as? List<Map<String, Any>> ?: emptyList()
+
+        val updatedList = addressList.filter { it["id"] != id }
+
+        userRef.update("address", updatedList).await()
+    }
+
 
     override suspend fun uploadDataToFirestore() {
         val coupons = listOf(

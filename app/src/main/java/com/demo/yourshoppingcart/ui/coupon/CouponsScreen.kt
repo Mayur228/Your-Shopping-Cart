@@ -12,19 +12,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -35,8 +29,6 @@ import androidx.compose.ui.unit.dp
 import com.demo.yourshoppingcart.common.ErrorView
 import com.demo.yourshoppingcart.common.LoadingView
 import com.demo.yourshoppingcart.coupon.domain.entity.couponEntity
-import com.demo.yourshoppingcart.ui.cart.CartState
-import com.demo.yourshoppingcart.ui.cart.CartViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,39 +39,25 @@ fun CouponsScreen(
 
     val state by viewModel.viewState.collectAsState()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Coupons") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
-        }
-    ) { padding ->
+    Box(modifier = Modifier.padding(horizontal = 8.dp)) {
+        when (state) {
 
-        Box(modifier = Modifier.padding(padding)) {
-            when (state) {
+            is CouponsState.Loading -> {
+                LoadingView()
+            }
 
-                is CouponsState.Loading -> {
-                    LoadingView()
-                }
+            is CouponsState.Error -> {
+                ErrorView(
+                    message = (state as CouponsState.Error).error)
+            }
 
-                is CouponsState.Error -> {
-                    ErrorView(
-                        message = (state as CouponsState.Error).error)
-                }
-
-                is CouponsState.Success -> {
-                    val coupons = (state as CouponsState.Success).coupons
-                    CouponsList(
-                        coupons = coupons,
-                        onApply = { viewModel.applyCoupon(it) },
-                        onRemove = { viewModel.removeCoupon(it) }
-                    )
-                }
+            is CouponsState.Success -> {
+                val coupons = (state as CouponsState.Success).coupons
+                CouponsList(
+                    coupons = coupons,
+                    onApply = { viewModel.applyCoupon(it) },
+                    onRemove = { viewModel.removeCoupon(it) }
+                )
             }
         }
     }
@@ -94,7 +72,7 @@ fun CouponsList(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(horizontal = 8.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(coupons) { coupon ->

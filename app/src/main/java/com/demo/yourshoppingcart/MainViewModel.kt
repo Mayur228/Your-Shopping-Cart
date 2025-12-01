@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.demo.yourshoppingcart.user.data.model.USERTYPE
 import com.demo.yourshoppingcart.user.data.model.UserModel
+import com.demo.yourshoppingcart.user.domain.usecase.CheckUserUseCase
 import com.demo.yourshoppingcart.user.domain.usecase.GetUserUseCase
 import com.demo.yourshoppingcart.user.domain.usecase.GuestLoginUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,7 +15,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val getUserUseCase: GetUserUseCase,
+    private val checkUserUseCase: CheckUserUseCase,
     private val guestLoginUseCase: GuestLoginUseCase
 ) : ViewModel() {
 
@@ -28,9 +29,13 @@ class MainViewModel @Inject constructor(
     private fun fetchCurrentUser() {
         viewModelScope.launch {
             _viewState.value = MainState.Loading
-            when (val result = getUserUseCase.invoke()) {
-                is Resource.Data<UserModel.UserResponse> -> {
-                    _viewState.value = MainState.Success(isDark = (_viewState.value as MainState.Success).isDark,user = result.value)
+            when (val result = checkUserUseCase.invoke()) {
+                is Resource.Data<Boolean> -> {
+                    if (result.value) {
+                        _viewState.value = MainState.Success(isDark = (_viewState.value as MainState.Success).isDark)
+                    }else {
+                        guestLogin()
+                    }
                 }
                 is Resource.Error -> {
                     guestLogin()
@@ -44,14 +49,7 @@ class MainViewModel @Inject constructor(
             _viewState.value = MainState.Loading
             when (val result = guestLoginUseCase.invoke()) {
                 is Resource.Data<String> -> {
-                    val guestUser = UserModel.UserResponse(
-                        userId = result.value,
-                        userNum = "",
-                        userType = USERTYPE.GUEST,
-                        isLogin = true,
-                        cart = null
-                    )
-                    _viewState.value = MainState.Success((_viewState.value as MainState.Success).isDark,user = guestUser)
+                    _viewState.value = MainState.Success((_viewState.value as MainState.Success).isDark)
                 }
                 is Resource.Error -> {
                     _viewState.value = MainState.Error(
@@ -63,7 +61,6 @@ class MainViewModel @Inject constructor(
     }
 
     fun updateTheme(isDark: Boolean) {
-        val currentUser = (_viewState.value as? MainState.Success)?.user
-        _viewState.value = MainState.Success(isDark = isDark, user = currentUser)
+        _viewState.value = MainState.Success(isDark = isDark)
     }
 }

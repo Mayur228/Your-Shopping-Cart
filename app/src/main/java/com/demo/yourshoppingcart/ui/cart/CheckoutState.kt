@@ -1,4 +1,4 @@
-package com.demo.yourshoppingcart.ui.checkout
+package com.demo.yourshoppingcart.ui.cart
 
 import com.demo.yourshoppingcart.payment.domain.entity.paymentEntity
 

@@ -28,7 +28,7 @@ fun CategoryList(
     onCategorySelected: (cat: String) -> Unit
 ) {
     LazyRow(
-        modifier = Modifier.padding(8.dp),
+        modifier = Modifier.padding(horizontal = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(categories) { category ->

@@ -69,7 +69,8 @@ class PhoneLoginViewModel @Inject constructor(
                     userNum = currentPhone,
                     userType = USERTYPE.LOGGED,
                     isLogin = true,
-                    cart = null
+                    cart = null,
+                    address = emptyList()
                 ),
                 verificationId = verificationId,
                 otp = currentOtp

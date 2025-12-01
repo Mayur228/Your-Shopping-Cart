@@ -68,7 +68,6 @@ fun MainScreen(viewModel: MainViewModel, storageProvider: StorageProviderImpl) {
                         storageProvider.putBoolean(StorageKeys.APP_THEME, isDark)
                         viewModel.updateTheme(isDark)
                     },
-                    user = successState.user
                 )
             }
         }

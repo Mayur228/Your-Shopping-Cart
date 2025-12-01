@@ -5,6 +5,7 @@ import com.demo.yourshoppingcart.coupon.data.model.Coupon
 import com.demo.yourshoppingcart.home.data.model.HomeModel
 import com.demo.yourshoppingcart.payment.data.model.PaymentModel
 import com.demo.yourshoppingcart.product_details.data.model.ProductDetailsModel
+import com.demo.yourshoppingcart.user.data.model.AddressModel
 import com.demo.yourshoppingcart.user.data.model.UserModel
 import kotlinx.coroutines.flow.Flow
 
@@ -17,7 +18,9 @@ interface DocumentApi {
     suspend fun fetchCart(): CartModel.Cart
     suspend fun updateCartItem(cartId: String,cart: List<CartModel.CartItem>)
     suspend fun clearCart()
+    suspend fun isNewUser(): Boolean
     suspend fun fetchUser(): UserModel.UserResponse
+    suspend fun updateUser(userId: String,user: UserModel.UserResponse)
     suspend fun guestLogin(): String
     suspend fun phoneLogin(oldGuestId: String? = null, user: UserModel.UserResponse, verificationId: String? = null, otp: String? = null): String
     suspend fun sendOtpFlow(phoneNumber: String): String
@@ -31,4 +34,7 @@ interface DocumentApi {
     suspend fun getCoupons(): List<Coupon>
     suspend fun applyCoupon(id: String)
     suspend fun removeCoupon(id: String)
+    suspend fun addAddress(address: AddressModel)
+    suspend fun updateAddress(id: String,address: AddressModel)
+    suspend fun deleteAddress(id: String)
 }
