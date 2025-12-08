@@ -27,6 +27,7 @@ import com.demo.yourshoppingcart.ui.login.PhoneLoginScreen
 import com.demo.yourshoppingcart.ui.orders.OrdersScreen
 import com.demo.yourshoppingcart.ui.product_details.ProductDetailsScreen
 import com.demo.yourshoppingcart.ui.profile.ProfileScreen
+import com.demo.yourshoppingcart.ui.profile.ProfileViewModel
 import com.demo.yourshoppingcart.user.data.model.UserModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,6 +39,7 @@ fun AppNavHost(
 ) {
     val cartViewModel: CartViewModel = hiltViewModel()
     val couponsViewModel: CouponsViewModel = hiltViewModel()
+    val profileViewModel: ProfileViewModel = hiltViewModel()
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -185,6 +187,7 @@ fun AppNavHost(
 
                 composable(NavRoutes.Profile.route) {
                     ProfileScreen(
+                        profileViewModel = profileViewModel,
                         onLogout = {}
                     )
                 }

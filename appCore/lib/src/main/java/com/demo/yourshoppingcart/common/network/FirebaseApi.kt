@@ -3,6 +3,7 @@ package com.demo.yourshoppingcart.common.network
 import com.demo.yourshoppingcart.cart.data.model.CartModel
 import com.demo.yourshoppingcart.coupon.data.model.Coupon
 import com.demo.yourshoppingcart.home.data.model.HomeModel
+import com.demo.yourshoppingcart.order.data.model.OrderModel
 import com.demo.yourshoppingcart.payment.data.model.PaymentModel
 import com.demo.yourshoppingcart.product_details.data.model.ProductDetailsModel
 import com.demo.yourshoppingcart.user.data.model.AddressModel
@@ -37,4 +38,7 @@ interface DocumentApi {
     suspend fun addAddress(address: AddressModel)
     suspend fun updateAddress(id: String,address: AddressModel)
     suspend fun deleteAddress(id: String)
+    suspend fun fetchOrderHistory(): List<OrderModel>
+    suspend fun fetchOrderDetails(id: String): OrderModel
+    suspend fun addOrdersHistory(order: OrderModel)
 }

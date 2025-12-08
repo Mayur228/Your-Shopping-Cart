@@ -5,6 +5,7 @@ import com.demo.yourshoppingcart.cart.data.model.CartModel
 import com.demo.yourshoppingcart.common.network.DocumentApi
 import com.demo.yourshoppingcart.coupon.data.model.Coupon
 import com.demo.yourshoppingcart.home.data.model.HomeModel
+import com.demo.yourshoppingcart.order.data.model.OrderModel
 import com.demo.yourshoppingcart.payment.data.model.PaymentModel
 import com.demo.yourshoppingcart.product_details.data.model.ProductDetailsModel
 import com.demo.yourshoppingcart.user.data.model.AddressModel
@@ -523,6 +524,64 @@ class DocumentApiFirebaseImpl @Inject constructor(
 
         userRef.update("address", updatedList).await()
     }
+
+    override suspend fun fetchOrderHistory(): List<OrderModel> {
+        val uid = auth.currentUser?.uid ?: throw Exception("User not logged in")
+        val userRef = firestore.collection("user").document(uid)
+
+        val userDoc = userRef.get().await()
+        val orderList = userDoc.get("orders") as? List<Map<String, Any>> ?: emptyList()
+
+        return orderList.map { map ->
+            OrderModel(
+                id = map["id"] as? String ?: "",
+                status = map["status"] as? String ?: "",
+                totalAmount = map["totalAmount"] as? String ?: "",
+                items = (map["items"] as? List<Map<String, Any>>)?.map { item ->
+                    OrderModel.OrderItem(
+                        productId = item["productId"] as? String ?: "",
+                        productName = item["productName"] as? String ?: "",
+                        productPrice = item["productPrice"] as? String ?: "",
+                        productQun = (item["productQun"] as? Long)?.toInt() ?: 0,
+                        productImg = item["productImg"] as? String ?: ""
+                    )
+                } ?: emptyList(),
+                paymentMethod = map["paymentMethod"] as? String ?: "",
+                orderDate = map["orderDate"] as? String ?: ""
+            )
+        }
+    }
+
+    override suspend fun fetchOrderDetails(id: String): OrderModel {
+        val orders = fetchOrderHistory()
+        return orders.find { it.id == id } ?: throw Exception("Order not found")
+    }
+
+    override suspend fun addOrdersHistory(order: OrderModel) {
+        val uid = auth.currentUser?.uid ?: throw Exception("User not logged in")
+        val userRef = firestore.collection("user").document(uid)
+
+        // Convert OrderModel to Map
+        val orderMap = hashMapOf(
+            "id" to order.id,
+            "status" to order.status,
+            "totalAmount" to order.totalAmount,
+            "paymentMethod" to order.paymentMethod,
+            "orderDate" to order.orderDate,
+            "items" to order.items.map { item ->
+                hashMapOf(
+                    "productId" to item.productId,
+                    "productName" to item.productName,
+                    "productPrice" to item.productPrice,
+                    "productQun" to item.productQun,
+                    "productImg" to item.productImg
+                )
+            }
+        )
+
+        userRef.update("orders", arrayUnion(orderMap)).await()
+    }
+
 
 
     override suspend fun uploadDataToFirestore() {

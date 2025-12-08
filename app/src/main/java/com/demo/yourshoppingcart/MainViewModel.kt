@@ -2,10 +2,7 @@ package com.demo.yourshoppingcart
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.demo.yourshoppingcart.user.data.model.USERTYPE
-import com.demo.yourshoppingcart.user.data.model.UserModel
 import com.demo.yourshoppingcart.user.domain.usecase.CheckUserUseCase
-import com.demo.yourshoppingcart.user.domain.usecase.GetUserUseCase
 import com.demo.yourshoppingcart.user.domain.usecase.GuestLoginUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,17 +23,23 @@ class MainViewModel @Inject constructor(
         fetchCurrentUser()
     }
 
+    private fun currentTheme(): Boolean {
+        return (viewState.value as? MainState.Success)?.isDark ?: false
+    }
+
     private fun fetchCurrentUser() {
         viewModelScope.launch {
             _viewState.value = MainState.Loading
-            when (val result = checkUserUseCase.invoke()) {
+
+            when (val result = checkUserUseCase()) {
                 is Resource.Data<Boolean> -> {
                     if (result.value) {
-                        _viewState.value = MainState.Success(isDark = (_viewState.value as MainState.Success).isDark)
-                    }else {
+                        _viewState.value = MainState.Success(isDark = currentTheme())
+                    } else {
                         guestLogin()
                     }
                 }
+
                 is Resource.Error -> {
                     guestLogin()
                 }
@@ -47,14 +50,14 @@ class MainViewModel @Inject constructor(
     fun guestLogin() {
         viewModelScope.launch {
             _viewState.value = MainState.Loading
-            when (val result = guestLoginUseCase.invoke()) {
+
+            when (guestLoginUseCase()) {
                 is Resource.Data<String> -> {
-                    _viewState.value = MainState.Success((_viewState.value as MainState.Success).isDark)
+                    _viewState.value = MainState.Success(isDark = currentTheme())
                 }
+
                 is Resource.Error -> {
-                    _viewState.value = MainState.Error(
-                        result.throwable.message ?: "Something went wrong"
-                    )
+                    _viewState.value = MainState.Error("Something went wrong")
                 }
             }
         }

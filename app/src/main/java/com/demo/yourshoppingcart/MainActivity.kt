@@ -23,13 +23,12 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    val viewModel: MainViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val viewModel: MainViewModel by viewModels()
         val storageProvider = StorageProviderImpl(context = application.applicationContext)
-
-        viewModel.updateTheme(storageProvider.getBoolean(StorageKeys.APP_THEME) == true)
 
         enableEdgeToEdge()
 
@@ -48,6 +47,7 @@ fun MainScreen(viewModel: MainViewModel, storageProvider: StorageProviderImpl) {
         is MainState.Loading -> {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
+                viewModel.updateTheme(storageProvider.getBoolean(StorageKeys.APP_THEME) == true)
             }
         }
 

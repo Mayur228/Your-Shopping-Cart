@@ -18,6 +18,9 @@ import com.demo.yourshoppingcart.cart.domain.usecase.UpdateCartUseCase
 import com.demo.yourshoppingcart.coupon.domain.usecase.ApplyCouponUseCase
 import com.demo.yourshoppingcart.coupon.domain.usecase.GetCouponsUseCase
 import com.demo.yourshoppingcart.coupon.domain.usecase.RemoveCouponUseCase
+import com.demo.yourshoppingcart.order.domain.usecase.AddOrderHistoryUseCase
+import com.demo.yourshoppingcart.order.domain.usecase.GetOrderDetailsUseCase
+import com.demo.yourshoppingcart.order.domain.usecase.GetOrderHistoryUseCase
 import com.demo.yourshoppingcart.payment.domain.usecase.AddPaymentMethodUseCase
 import com.demo.yourshoppingcart.payment.domain.usecase.DeletePaymentMethodUseCase
 import com.demo.yourshoppingcart.payment.domain.usecase.GetPaymentMethodUseCase
@@ -146,6 +149,17 @@ object Core {
             get() = get().get()
 
         val removeCouponUseCase: RemoveCouponUseCase
+            get() = get().get()
+    }
+
+    object Order{
+        val addOrderHistoryUseCase: AddOrderHistoryUseCase
+            get() = get().get()
+
+        val getOrderHistoryUseCase: GetOrderHistoryUseCase
+            get() = get().get()
+
+        val getOrderDetailsUseCase: GetOrderDetailsUseCase
             get() = get().get()
     }
 }
