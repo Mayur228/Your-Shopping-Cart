@@ -17,7 +17,6 @@ import javax.inject.Inject
 class OrdersViewModel @Inject constructor(
     private val addHistoryUseCase: AddOrderHistoryUseCase,
     private val getOrderHistoryUseCase: GetOrderHistoryUseCase,
-    private val getOrderDetailsUseCase: GetOrderDetailsUseCase
 ): ViewModel() {
     private val _state = MutableStateFlow<OrdersState>(OrdersState.Loading)
     val state: StateFlow<OrdersState> = _state
@@ -48,21 +47,6 @@ class OrdersViewModel @Inject constructor(
             when(result){
                 is Resource.Data<Unit> -> {
                     getOrders()
-                }
-                is Resource.Error -> {
-                    _state.value = OrdersState.Error(error = result.throwable.message ?: "something went wrong")
-                }
-            }
-        }
-    }
-
-     fun getOrderDetails(id: String) {
-        viewModelScope.launch {
-            _state.value = OrdersState.Loading
-            val result = getOrderDetailsUseCase.invoke(id = id)
-            when(result){
-                is Resource.Data<orderEntity> -> {
-                    //_state.value = OrdersState.Success(orderList = result.value)
                 }
                 is Resource.Error -> {
                     _state.value = OrdersState.Error(error = result.throwable.message ?: "something went wrong")

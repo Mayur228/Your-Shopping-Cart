@@ -26,7 +26,8 @@ fun OrdersScreen(
 ) {
     val orderState by viewModel.state.collectAsState()
 
-    when(orderState) {
+    when (orderState) {
+
         is OrdersState.Loading -> {
             LoadingView()
         }
@@ -36,15 +37,20 @@ fun OrdersScreen(
         }
 
         is OrdersState.Success -> {
-            val orders = (orderState as OrdersState.Success)
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(orders.orderList, key = { it.id }) { order ->
-                    OrderCard(order)
+            val orders = (orderState as OrdersState.Success).orderList
+
+            if (orders.isEmpty()) {
+                EmptyOrdersView()
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(orders, key = { it.id }) { order ->
+                        OrderCard(order)
+                    }
                 }
             }
         }
@@ -109,3 +115,39 @@ fun OrderCard(order: OrderModel) {
         }
     }
 }
+
+@Composable
+fun EmptyOrdersView() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+            Icon(
+                imageVector = Icons.Default.LocalShipping,
+                contentDescription = null,
+                modifier = Modifier.size(64.dp),
+                tint = Color.Gray
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "No Orders Yet",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "You haven’t placed any order yet.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.Gray
+            )
+        }
+    }
+}
+

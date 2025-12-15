@@ -1,7 +1,6 @@
 package com.demo.yourshoppingcart.ui.checkout
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -39,12 +38,12 @@ import com.demo.yourshoppingcart.payment.data.model.PaymentModel
 import com.demo.yourshoppingcart.ui.cart.CartState
 import com.demo.yourshoppingcart.ui.cart.CartViewModel
 import com.demo.yourshoppingcart.ui.cart.CheckoutState
-import com.demo.yourshoppingcart.ui.checkout.components.AddNewOptionCard
-import com.demo.yourshoppingcart.ui.checkout.components.AppliedCouponCard
-import com.demo.yourshoppingcart.ui.checkout.components.PaymentOptionItem
-import com.demo.yourshoppingcart.ui.checkout.components.SummaryRow
-import com.demo.yourshoppingcart.ui.checkout.dialog.AddCardDialog
-import com.demo.yourshoppingcart.ui.checkout.dialog.AddUpiDialog
+import com.demo.yourshoppingcart.ui.cart.components.AddNewOptionCard
+import com.demo.yourshoppingcart.ui.cart.components.AppliedCouponCard
+import com.demo.yourshoppingcart.ui.cart.components.PaymentOptionItem
+import com.demo.yourshoppingcart.ui.cart.components.SummaryRow
+import com.demo.yourshoppingcart.ui.cart.dialog.AddCardDialog
+import com.demo.yourshoppingcart.ui.cart.dialog.AddUpiDialog
 import com.demo.yourshoppingcart.ui.coupon.CouponsState
 import com.demo.yourshoppingcart.ui.coupon.CouponsViewModel
 

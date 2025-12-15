@@ -1,4 +1,4 @@
-package com.demo.yourshoppingcart.ui.checkout.dialog
+package com.demo.yourshoppingcart.ui.cart.dialog
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

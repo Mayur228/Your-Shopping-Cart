@@ -1,42 +1,61 @@
 package com.demo.yourshoppingcart.ui.cart
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Discount
 import androidx.compose.material.icons.filled.AddCard
 import androidx.compose.material.icons.filled.AddHome
-import androidx.compose.material.icons.filled.Discount
-import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowDropUp
+import androidx.compose.material.icons.filled.CurrencyRupee
+import androidx.compose.material.icons.filled.DeliveryDining
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import com.demo.yourshoppingcart.common.AddAddressDialog
 import com.demo.yourshoppingcart.payment.data.model.PaymentModel
-import com.demo.yourshoppingcart.ui.cart.CheckoutState
 import com.demo.yourshoppingcart.ui.checkout.CheckoutViewModel
-import com.demo.yourshoppingcart.ui.checkout.components.AddNewOptionCard
-import com.demo.yourshoppingcart.ui.checkout.components.AppliedCouponCard
-import com.demo.yourshoppingcart.ui.checkout.components.PaymentOptionItem
-import com.demo.yourshoppingcart.ui.checkout.components.SummaryRow
-import com.demo.yourshoppingcart.ui.checkout.dialog.AddCardDialog
-import com.demo.yourshoppingcart.ui.checkout.dialog.AddUpiDialog
+import com.demo.yourshoppingcart.ui.cart.components.AddNewOptionCard
+import com.demo.yourshoppingcart.ui.cart.components.AppliedCouponCard
+import com.demo.yourshoppingcart.ui.cart.components.EmptyCartView
+import com.demo.yourshoppingcart.ui.cart.components.PaymentOptionItem
+import com.demo.yourshoppingcart.ui.cart.components.PaymentSection
+import com.demo.yourshoppingcart.ui.cart.components.SummaryRow
+import com.demo.yourshoppingcart.ui.cart.dialog.AddCardDialog
+import com.demo.yourshoppingcart.ui.cart.dialog.AddUpiDialog
 import com.demo.yourshoppingcart.ui.coupon.CouponsState
 import com.demo.yourshoppingcart.ui.coupon.CouponsViewModel
 import com.demo.yourshoppingcart.user.data.model.AddressModel
+import kotlin.math.roundToInt
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
 fun CartScreen(
     cartViewModel: CartViewModel,
@@ -54,12 +73,24 @@ fun CartScreen(
     val checkoutState by checkoutViewModel.viewState.collectAsState()
 
     val cartItems = (cartState as? CartState.Success)?.cartEntity?.cartItem ?: emptyList()
-    val appliedCoupon = (couponState as? CouponsState.Success)?.coupons?.find { it.isApplied }
 
-    // TOTALS
+    // Dialog states
+    var showAddUpiDialog by remember { mutableStateOf(false) }
+    var showAddCardDialog by remember { mutableStateOf(false) }
+    var showAddAddressDialog by remember { mutableStateOf(false) }
+    var expandedPayment by remember { mutableStateOf(false) }
+
+    // Empty cart
+    if (cartItems.isEmpty()) {
+        EmptyCartView()
+        return
+    }
+
+    // Price calculations
     val itemsTotal = cartItems.sumOf { it.productQun * (it.productPrice.toIntOrNull() ?: 0) }
     val deliveryCharge = 40
-    val tax = (itemsTotal * 0.10).toInt()
+    val tax = (itemsTotal * 0.10).roundToInt()
+    val appliedCoupon = (couponState as? CouponsState.Success)?.coupons?.find { it.isApplied }
     val discount = when {
         appliedCoupon == null -> 0
         appliedCoupon.discountAmount > 0 -> appliedCoupon.discountAmount
@@ -68,107 +99,176 @@ fun CartScreen(
     }
     val finalAmount = itemsTotal + deliveryCharge + tax - discount
 
-    var showAddUpiDialog by remember { mutableStateOf(false) }
-    var showAddCardDialog by remember { mutableStateOf(false) }
-    var showAddAddressDialog by remember { mutableStateOf(false) }
-
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        contentPadding = PaddingValues(8.dp)
-    ) {
-        // PRODUCT ITEMS
-        items(cartItems, key = { it.productId }) { item ->
-            ProductItemCard(
-                itemName = item.productName,
-                itemPrice = item.productPrice,
-                itemDes = item.productDes,
-                itemImg = item.productImg,
-                quantity = item.productQun,
-                onIncrease = { cartViewModel.createOrUpdateCart(item.productId, item.productQun + 1) },
-                onDecrease = { cartViewModel.createOrUpdateCart(item.productId, item.productQun - 1) }
-            )
-        }
-
-        // COUPON SECTION
-        item {
-            if (appliedCoupon != null) {
-                AppliedCouponCard(
-                    code = appliedCoupon.code,
-                    description = appliedCoupon.description,
-                    onRemove = { couponViewModel.removeCoupon(appliedCoupon.id) }
-                )
-            } else {
-                AddNewOptionCard(
-                    title = "Apply Coupon",
-                    icon = Icons.Default.Discount,
-                    onClick = onApplyCoupon
-                )
-            }
-        }
-
-        // ADDRESS SECTION
-        item {
-            if (addresses.isEmpty()) {
-                AddNewOptionCard(
-                    title = "Add Address",
-                    icon = Icons.Default.AddHome,
-                    onClick = { showAddAddressDialog = true }
-                )
-            } else {
-                addresses.forEach { addr ->
-                    Text("Deliver to: ${addr.fullAddress}", style = MaterialTheme.typography.bodyLarge)
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("Your Cart") },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(imageVector = Icons.Default.ShoppingCart, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    // placeholder spacing
+                    Spacer(modifier = Modifier.width(8.dp))
                 }
-            }
-        }
-
-        // PAYMENT METHOD SECTION
-        if (checkoutState is CheckoutState.Success) {
-            val data = checkoutState as CheckoutState.Success
-            item {
-                PaymentMethodSection(
-                    checkoutViewModel = checkoutViewModel,
-                    selectedMethod = data.selectedPaymentMethod,
-                    onShowAddUpiDialog = { showAddUpiDialog = true },
-                    onShowAddCardDialog = { showAddCardDialog = true }
-                )
-            }
-        }
-
-        // ORDER SUMMARY + PLACE ORDER as last item
-        item {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            )
+        },
+        bottomBar = {
+            // Sticky bottom summary bar
+            Surface(
+                tonalElevation = 8.dp,
+                shadowElevation = 10.dp
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Order Summary", style = MaterialTheme.typography.titleMedium)
-                    Spacer(Modifier.height(12.dp))
-                    SummaryRow("Items Total", "₹$itemsTotal")
-                    SummaryRow("Delivery", "₹$deliveryCharge")
-                    SummaryRow("Tax (10%)", "₹$tax")
-                    if (discount > 0) SummaryRow("Discount", "-₹$discount")
-                    Divider(Modifier.padding(vertical = 8.dp))
-                    SummaryRow("Total Payable", "₹$finalAmount", bold = true)
-                    Spacer(Modifier.height(8.dp))
-
-                    Button(
-                        onClick = { if (isPhoneLogin) onPlaceOrder() else navigateToPhoneLogin() },
+                Column(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp)) {
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(50)
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(if (isPhoneLogin) "Place Order (₹$finalAmount)" else "Login to Continue")
+                        Column {
+                            Text("Total Payable", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onBackground)
+                            Text("₹$finalAmount",
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+
+                        Button(
+                            onClick = {
+                                if (isPhoneLogin) onPlaceOrder() else navigateToPhoneLogin()
+                            },
+                            shape = RoundedCornerShape(50),
+                            modifier = Modifier.height(48.dp)
+                        ) {
+                            Text(if (isPhoneLogin) "Place Order" else "Login to Continue")
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("${cartItems.size} items", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Includes delivery & taxes", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
-        }
-    }
+        },
+        content = { innerPadding ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(horizontal = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(bottom = 100.dp) // allow space for sticky bar
+            ) {
 
-    // ADD DIALOGS
+                items(cartItems, key = { it.productId }) { item ->
+                    ProductItemCardAPlus(
+                        itemId = item.productId,
+                        itemName = item.productName,
+                        itemPrice = item.productPrice,
+                        itemDes = item.productDes,
+                        itemImg = item.productImg,
+                        quantity = item.productQun,
+                        onIncrease = { cartViewModel.createOrUpdateCart(item.productId, item.productQun + 1) },
+                        onDecrease = { cartViewModel.createOrUpdateCart(item.productId, item.productQun - 1) }
+                    )
+                }
+
+                // Coupon section
+                item {
+                    if (appliedCoupon != null) {
+                        AppliedCouponCard(
+                            code = appliedCoupon.code,
+                            description = appliedCoupon.description,
+                            onRemove = { couponViewModel.removeCoupon(appliedCoupon.id) }
+                        )
+                    } else {
+                        AddNewOptionCard(
+                            title = "Apply Coupon",
+                            icon = Icons.Default.Discount,
+                            onClick = onApplyCoupon
+                        )
+                    }
+                }
+
+                // Address
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            if (addresses.isEmpty()) {
+                                AddNewOptionCard(
+                                    title = "Add Address",
+                                    icon = Icons.Default.AddHome,
+                                    onClick = { showAddAddressDialog = true }
+                                )
+                            } else {
+                                Text("Deliver to", style = MaterialTheme.typography.labelLarge)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                addresses.forEach { addr ->
+                                    Text(
+                                        text = addr.fullAddress,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Payment
+                if (checkoutState is CheckoutState.Success) {
+                    val data = checkoutState as CheckoutState.Success
+                    item {
+                        PaymentSection(
+                            checkoutState = checkoutState,
+                            onSelect = { checkoutViewModel.selectPaymentMethod(it) },
+                            onAddUpi = { showAddUpiDialog = true },
+                            onAddCard = { showAddCardDialog = true }
+                        )
+                    }
+                }
+
+                // Order summary
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text("Order Summary", style = MaterialTheme.typography.titleMedium)
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            SummaryRow("Items Total", "₹$itemsTotal",icon = Icons.Default.CurrencyRupee)
+                            SummaryRow("Delivery", "₹$deliveryCharge",icon = Icons.Default.DeliveryDining)
+                            SummaryRow("Tax (10%)", "₹$tax",icon = Icons.Default.Info)
+                            if (discount > 0) SummaryRow("Discount", "-₹$discount", icon = Icons.Default.Discount)
+
+                            Divider(modifier = Modifier.padding(vertical = 8.dp))
+
+                            SummaryRow("Total Payable", "₹$finalAmount", bold = true)
+                        }
+                    }
+                }
+
+                item { Spacer(modifier = Modifier.height(12.dp)) }
+            }
+        }
+    )
+
+    // Dialogs
     if (showAddUpiDialog) AddUpiDialog(
         onDismiss = { showAddUpiDialog = false },
         onAdd = { upi -> checkoutViewModel.addPaymentMethod(PaymentModel.Upi(upiId = upi)) }
@@ -181,14 +281,16 @@ fun CartScreen(
 
     if (showAddAddressDialog) AddAddressDialog(
         onDismiss = { showAddAddressDialog = false },
-        onAdd = {
-            //add address
-        }
+        onAdd = { /* handle add address */ }
     )
 }
 
+/* ---------------------------
+   Product card: A+ Ribbon style
+   --------------------------- */
 @Composable
-fun ProductItemCard(
+private fun ProductItemCardAPlus(
+    itemId: String,
     itemName: String,
     itemPrice: String,
     itemDes: String,
@@ -197,129 +299,114 @@ fun ProductItemCard(
     onIncrease: () -> Unit,
     onDecrease: () -> Unit
 ) {
-    Card(
-        shape = RoundedCornerShape(12.dp),
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Image(
-                painter = rememberAsyncImagePainter(itemImg),
-                contentDescription = itemName,
-                modifier = Modifier
-                    .size(72.dp)
-                    .background(Color.White, RoundedCornerShape(8.dp))
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(itemName, style = MaterialTheme.typography.titleMedium)
-                Text("₹$itemPrice", style = MaterialTheme.typography.bodyLarge)
-                Text(itemDes, style = MaterialTheme.typography.bodySmall, maxLines = 2, color = Color.Gray)
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onDecrease) { Icon(Icons.Default.Remove, contentDescription = "Decrease") }
-                Text(quantity.toString())
-                IconButton(onClick = onIncrease) { Icon(Icons.Default.Add, contentDescription = "Increase") }
-            }
-        }
-    }
-}
-
-@Composable
-fun PaymentMethodSection(
-    checkoutViewModel: CheckoutViewModel,
-    selectedMethod: String,
-    onShowAddUpiDialog: () -> Unit,
-    onShowAddCardDialog: () -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-    val checkoutState by checkoutViewModel.viewState.collectAsState()
-    val data = checkoutState as? CheckoutState.Success ?: return
+    var wish by remember { mutableStateOf(false) }
+    // Fancy discount percent derived from id for demo; replace with real value when available
+    val discount = remember(itemId) { (5..30).random() }
 
     Card(
-        shape = RoundedCornerShape(12.dp),
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(8.dp, RoundedCornerShape(14.dp)),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            // Header
+        Box(modifier = Modifier.fillMaxWidth()) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { expanded = !expanded },
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                val selectedTitle = data.typesOfPaymentMethods.find { it.id == selectedMethod }?.let {
-                    when (it) {
-                        is PaymentModel.Card -> "Card ****${it.cardNumber.toString().takeLast(4)}"
-                        is PaymentModel.Upi -> it.upiId
-                        else -> it.id
+                // IMAGE + ribbon
+                Box(modifier = Modifier.size(110.dp)) {
+                    Image(
+                        painter = rememberAsyncImagePainter(itemImg),
+                        contentDescription = itemName,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(10.dp))
+                    )
+
+                    // subtle overlay for legibility
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    0f to Color.Transparent,
+                                    1f to Color.Black.copy(alpha = 0.06f)
+                                )
+                            )
+                    )
+
+                    // Ribbon
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .offset(x = (-6).dp, y = (-6).dp)
+                            .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(6.dp))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(text = "-$discount%", style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold))
                     }
-                } ?: "Cash on Delivery"
 
-                Text("Payment Method: $selectedTitle", style = MaterialTheme.typography.bodyMedium)
-                Icon(
-                    imageVector = if (expanded) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
-                    contentDescription = "Expand"
-                )
-            }
-
-            if (expanded) {
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // COD
-                PaymentOptionItem(
-                    title = "Cash on Delivery",
-                    isSelected = selectedMethod == "COD",
-                    onClick = { checkoutViewModel.selectPaymentMethod("COD") }
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // UPI Section
-                data.typesOfPaymentMethods.filterIsInstance<PaymentModel.Upi>().forEach { method ->
-                    PaymentOptionItem(
-                        title = method.upiId,
-                        isSelected = selectedMethod == method.id,
-                        onClick = { checkoutViewModel.selectPaymentMethod(method.id) }
-                    )
+                    // wishlist floating heart
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .offset(x = 6.dp, y = (-6).dp)
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceContainer)
+                            .clickable { wish = !wish },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = if (wish) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = "Wishlist",
+                            tint = if (wish) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.width(12.dp))
 
-                // Card Section
-                data.typesOfPaymentMethods.filterIsInstance<PaymentModel.Card>().forEach { method ->
-                    PaymentOptionItem(
-                        title = method.cardHolderName,
-                        subtitle = "****${method.cardNumber.toString().takeLast(4)}",
-                        isSelected = selectedMethod == method.id,
-                        onClick = { checkoutViewModel.selectPaymentMethod(method.id) }
-                    )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(itemName, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text("₹$itemPrice", style = MaterialTheme.typography.titleMedium.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold))
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(itemDes, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.width(8.dp))
 
-                // Buttons row: Add UPI and Add Card
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    AddNewOptionCard(
-                        title = "Add UPI",
-                        icon = Icons.Default.Add,
-                        onClick = onShowAddUpiDialog,
-                        modifier = Modifier.weight(1f)
-                    )
-                    AddNewOptionCard(
-                        title = "Add Card",
-                        icon = Icons.Default.AddCard,
-                        onClick = onShowAddCardDialog,
-                        modifier = Modifier.weight(1f)
-                    )
+                // Floating quantity vertical pill
+                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                    AnimatedContent(targetState = quantity, transitionSpec = { fadeIn(tween(200)) + expandVertically() togetherWith fadeOut(tween(150)) }) { qty ->
+                        if (qty <= 0) {
+                            Button(onClick = onIncrease, shape = RoundedCornerShape(50)) {
+                                Icon(Icons.Default.Add, contentDescription = "Add")
+                            }
+                        } else {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                IconButton(onClick = onIncrease, modifier = Modifier.size(36.dp)) {
+                                    Icon(Icons.Default.Add, contentDescription = "Increase")
+                                }
+                                Text(qty.toString(), style = MaterialTheme.typography.titleMedium)
+                                IconButton(onClick = onDecrease, modifier = Modifier.size(36.dp)) {
+                                    Icon(Icons.Default.Remove, contentDescription = "Decrease")
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

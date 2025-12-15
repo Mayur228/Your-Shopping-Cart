@@ -1,27 +1,23 @@
 package com.demo.yourshoppingcart.ui.home
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.demo.yourshoppingcart.common.ErrorView
 import com.demo.yourshoppingcart.common.LoadingView
+import com.demo.yourshoppingcart.ui.cart.CartState
 import com.demo.yourshoppingcart.ui.cart.CartViewModel
 import com.demo.yourshoppingcart.ui.home.component.CategoryList
+import com.demo.yourshoppingcart.ui.home.component.HomeHeader
 import com.demo.yourshoppingcart.ui.home.component.ItemList
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
+    isDark: Boolean,
     onThemeToggle: (isDark: Boolean) -> Unit,
     onCartClick: () -> Unit,
     onItemClick: (itemId: String) -> Unit,
@@ -29,30 +25,65 @@ fun HomeScreen(
 ) {
     val homeViewModel = hiltViewModel<HomeViewModel>()
     val view by homeViewModel.viewState.collectAsState()
+    val cartState by cartViewModel.viewState.collectAsState()
 
-    when (view) {
-        is HomeViewState.Error -> ErrorView((view as HomeViewState.Error).message)
-        HomeViewState.Loading -> LoadingView()
-        is HomeViewState.Success -> {
-            val product = (view as HomeViewState.Success)
-            Column(
-                modifier = Modifier
-                    .padding(8.dp)
-                    .fillMaxSize()
-            ) {
-                CategoryList(
-                    categories = product.categories,
-                    onCategorySelected = { homeViewModel.getSelectedCatItem(it) }
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                if (product.isLoading) {
-                    LoadingView()
-                } else {
-                    ItemList(
-                        items = product.items,
-                        onItemSelected = { onItemClick(it) },
-                        cartViewModel = cartViewModel,
+    var isDarkMode by remember { mutableStateOf(isDark) }
+
+    Scaffold(
+        topBar = {
+            HomeHeader(
+                title = "Home",
+                isDarkMode = isDarkMode,
+                cartCount = (cartState as? CartState.Success)?.cartEntity?.cartItem?.size ?: 0,
+                onThemeToggle = {
+                    isDarkMode = it
+                    onThemeToggle(it)
+                },
+                onCartClick = onCartClick,
+                onSearchClick = { }
+            )
+        }
+    ) { paddingValues ->
+
+        when (view) {
+
+            is HomeViewState.Error -> ErrorView((view as HomeViewState.Error).message)
+
+            HomeViewState.Loading -> LoadingView()
+
+            is HomeViewState.Success -> {
+                val product = (view as HomeViewState.Success)
+
+                Column(
+                    modifier = Modifier
+                        .padding(paddingValues)
+                        .padding(8.dp)
+                        .fillMaxSize()
+                ) {
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    CategoryList(
+                        categories = product.categories,
+                        onCategorySelected = { cat ->
+                            if (cat == "All") homeViewModel.loadData()
+                            else homeViewModel.getSelectedCatItem(cat)
+                        },
+                        isDark = isDarkMode
                     )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    if (product.isLoading) {
+                        LoadingView()
+                    } else {
+                        ItemList(
+                            items = product.items,
+                            onItemSelected = { onItemClick(it) },
+                            cartViewModel = cartViewModel,
+                            isDark = isDarkMode
+                        )
+                    }
                 }
             }
         }

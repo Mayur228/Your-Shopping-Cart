@@ -37,9 +37,4 @@ class OrdersViewModelModule {
     fun provideGetOrderHistory(): GetOrderHistoryUseCase {
         return Core.Order.getOrderHistoryUseCase
     }
-
-    @Provides
-    fun provideGetOrderDetails(): GetOrderDetailsUseCase {
-        return Core.Order.getOrderDetailsUseCase
-    }
 }

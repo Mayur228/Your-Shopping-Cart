@@ -45,44 +45,6 @@ fun AppNavHost(
     val currentRoute = navBackStackEntry?.destination?.route
 
     Scaffold(
-        topBar = {
-            when (currentRoute) {
-                NavRoutes.ProductDetails.route -> {
-                    TopAppBar(
-                        title = { Text("Product Details") },
-                        navigationIcon = {
-                            IconButton(onClick = { navController.popBackStack() }) {
-                                Icon(
-                                    Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "Back"
-                                )
-                            }
-                        }
-                    )
-                }
-
-                else -> {
-                    val currentScreen =
-                        bottomNavItems.firstOrNull { it.route.route == currentRoute }?.route
-                    currentScreen?.title?.let { title ->
-                        TopAppBar(
-                            title = { Text(title) },
-                            actions = {
-                                IconButton(onClick = { onThemeToggle(!isDarkTheme) }) {
-                                    Icon(
-                                        painterResource(
-                                            if (isDarkTheme) R.drawable.dark_icon
-                                            else R.drawable.light_icon
-                                        ),
-                                        contentDescription = "Theme Toggle"
-                                    )
-                                }
-                            }
-                        )
-                    }
-                }
-            }
-        },
         bottomBar = {
             when (currentRoute) {
                 NavRoutes.Home.route,
@@ -135,7 +97,8 @@ fun AppNavHost(
                                 )
                             )
                         },
-                        cartViewModel = cartViewModel
+                        cartViewModel = cartViewModel,
+                        isDark = isDarkTheme
                     )
                 }
 
