@@ -6,24 +6,26 @@ import com.demo.yourshoppingcart.common.network.DocumentApi
 import com.demo.yourshoppingcart.coupon.data.model.Coupon
 import com.demo.yourshoppingcart.home.data.model.HomeModel
 import com.demo.yourshoppingcart.order.data.model.OrderModel
+import com.demo.yourshoppingcart.order.data.model.OrderStatus
 import com.demo.yourshoppingcart.payment.data.model.PaymentModel
 import com.demo.yourshoppingcart.product_details.data.model.ProductDetailsModel
 import com.demo.yourshoppingcart.user.data.model.AddressModel
 import com.demo.yourshoppingcart.user.data.model.AddressType
 import com.demo.yourshoppingcart.user.data.model.USERTYPE
 import com.demo.yourshoppingcart.user.data.model.UserModel
+import com.demo.yourshoppingcart.wish_list.data.model.WishList
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FieldValue.arrayRemove
 import com.google.firebase.firestore.FieldValue.arrayUnion
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.getField
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
-import java.util.UUID
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlin.coroutines.resume
@@ -34,7 +36,7 @@ class DocumentApiFirebaseImpl @Inject constructor(
     private val activityProvider: FTAClass
 ) : DocumentApi {
 
-    override suspend fun fetchCategory(): HomeModel.CategoryResponse {
+    override suspend fun fetchCategory(): List<HomeModel.Category> {
         val collection = firestore.collection("category").get().await()
         val catData = collection.documents.map { doc ->
             HomeModel.Category(
@@ -43,43 +45,47 @@ class DocumentApiFirebaseImpl @Inject constructor(
                 catImg = doc.getString("catImg") ?: ""
             )
         }
-        return HomeModel.CategoryResponse(catData)
+        return catData
     }
 
-    override suspend fun fetchAllItems(): HomeModel.CategoryItemResponse {
+    override suspend fun fetchAllItems(): List<HomeModel.Product> {
         val collection = firestore.collection("categoryItem").get().await()
-        val itemData = collection.documents.map { doc ->
-            HomeModel.Item(
-                itemId = doc.getString("itemId") ?: "",
-                itemName = doc.getString("itemName") ?: "",
-                itemDes = doc.getString("itemDes") ?: "",
-                itemImg = doc.getString("itemImg") ?: "",
-                itemPrice = doc.getString("itemPrice") ?: "",
-                cat = doc.getString("cat") ?: ""
+        val product = collection.documents.map { doc ->
+            HomeModel.Product(
+                productId = doc.getString("itemId") ?: "",
+                productName = doc.getString("itemName") ?: "",
+                productDes = doc.getString("itemDes") ?: "",
+                productImg = doc.getString("itemImg") ?: "",
+                productPrice = doc.getString("itemPrice")?.toInt() ?: 0,
+                cat = doc.getString("cat") ?: "",
+                productRating = doc.getString("rate")?.toDouble() ?: 0.0,
+                productDiscount = doc.getString("discount")?.toInt() ?: 0
             )
         }
-        return HomeModel.CategoryItemResponse(itemData)
+        return product
     }
 
-    override suspend fun fetchSelectedCatItem(cat: String): HomeModel.CategoryItemResponse {
+    override suspend fun fetchSelectedCatProduct(cat: String): List<HomeModel.Product> {
         val collection = firestore.collection("categoryItem")
             .whereEqualTo("cat", cat)
             .get()
             .await()
         val itemData = collection.documents.map { doc ->
-            HomeModel.Item(
-                itemId = doc.getString("itemId") ?: "",
-                itemName = doc.getString("itemName") ?: "",
-                itemDes = doc.getString("itemDes") ?: "",
-                itemImg = doc.getString("itemImg") ?: "",
-                itemPrice = doc.getString("itemPrice") ?: "",
-                cat = doc.getString("cat") ?: ""
+            HomeModel.Product(
+                productId = doc.getString("itemId") ?: "",
+                productName = doc.getString("itemName") ?: "",
+                productDes = doc.getString("itemDes") ?: "",
+                productImg = doc.getString("itemImg") ?: "",
+                productPrice = doc.getString("itemPrice")?.toInt() ?: 0,
+                cat = doc.getString("cat") ?: "",
+                productRating = doc.getString("rate")?.toDouble() ?: 0.0,
+                productDiscount = doc.getString("discount")?.toInt() ?: 0
             )
         }
-        return HomeModel.CategoryItemResponse(itemData)
+        return itemData
     }
 
-    override suspend fun fetchProductDetails(itemId: String): ProductDetailsModel.DetailModel {
+    override suspend fun fetchProductDetails(itemId: String): ProductDetailsModel.Product {
         val data = firestore.collection("categoryItem")
             .whereEqualTo("itemId", itemId)
             .get()
@@ -87,13 +93,16 @@ class DocumentApiFirebaseImpl @Inject constructor(
             .documents
             .firstOrNull()
 
-        return ProductDetailsModel.DetailModel(
-            itemId = data?.getString("itemId") ?: "",
-            itemName = data?.getString("itemName") ?: "",
-            itemImages = data?.get("itemImages") as? List<String> ?: emptyList(),
-            itemDescription = data?.getString("itemDes") ?: "",
-            itemPrice = data?.getString("itemPrice") ?: "",
-            itemImage = data?.getString("itemImg") ?: ""
+        return ProductDetailsModel.Product(
+            productId = data?.getString("itemId") ?: "",
+            productName = data?.getString("itemName") ?: "",
+            productImages = data?.get("itemImages") as? List<String> ?: emptyList(),
+            productDes = data?.getString("itemDes") ?: "",
+            productPrice = data?.getString("itemPrice")?.toInt() ?: 0,
+            cat = data?.getString("cat") ?: "",
+            productImg = data?.getString("itemImg") ?: "",
+            productRating = data?.getString("rate")?.toDouble() ?: 0.0,
+            productDiscount = data?.getString("discount")?.toInt() ?: 0
         )
     }
 
@@ -531,11 +540,10 @@ class DocumentApiFirebaseImpl @Inject constructor(
 
         val userDoc = userRef.get().await()
         val orderList = userDoc.get("orders") as? List<Map<String, Any>> ?: emptyList()
-
         return orderList.map { map ->
             OrderModel(
                 id = map["id"] as? String ?: "",
-                status = map["status"] as? String ?: "",
+                status = map["status"] as? OrderStatus ?: OrderStatus.SHIPING,
                 totalAmount = map["totalAmount"] as? String ?: "",
                 items = (map["items"] as? List<Map<String, Any>>)?.map { item ->
                     OrderModel.OrderItem(
@@ -582,6 +590,70 @@ class DocumentApiFirebaseImpl @Inject constructor(
         userRef.update("orders", arrayUnion(orderMap)).await()
     }
 
+    override suspend fun addWishList(product: WishList) {
+        val uid = auth.currentUser?.uid ?: throw Exception("User not logged in")
+        val userRef = firestore.collection("user").document(uid)
+
+        val wishMap = hashMapOf(
+            "id" to product.id,
+            "product" to product.product?.let {
+                hashMapOf(
+                    "productId" to it.productId,
+                    "productName" to it.productName,
+                    "productImg" to it.productImg,
+                    "productDes" to it.productDes,
+                    "productPrice" to it.productPrice,
+                    "productDiscount" to it.productDiscount,
+                    "productRating" to it.productRating,
+                    "productImages" to it.productImages,
+                    "cat" to it.cat
+                )
+            }
+        )
+
+        userRef.update("wishList", arrayUnion(wishMap)).await()
+    }
+
+    override suspend fun removeWishList(id: String) {
+        val uid = auth.currentUser?.uid ?: throw Exception("User not logged in")
+        val userRef = firestore.collection("user").document(uid)
+
+        val snapshot = userRef.get().await()
+        val wishList = snapshot.get("wishList") as? List<Map<String, Any>> ?: return
+
+        val updatedList = wishList.filterNot { it["id"] == id }
+
+        userRef.update("wishList", updatedList).await()
+    }
+
+    override suspend fun getWishList(): List<WishList> {
+        val uid = auth.currentUser?.uid ?: throw Exception("User not logged in")
+        val userRef = firestore.collection("user").document(uid)
+
+        val snapshot = userRef.get().await()
+        val wishList = snapshot.get("wishList") as? List<Map<String, Any>> ?: emptyList()
+
+        return wishList.map { map ->
+            val productMap = map["product"] as? Map<String, Any>
+
+            WishList(
+                id = map["id"] as? String ?: "",
+                product = productMap?.let {
+                    ProductDetailsModel.Product(
+                        productId = it["productId"] as String,
+                        productName = it["productName"] as String,
+                        productImg = it["productImg"] as String,
+                        productDes = it["productDes"] as String,
+                        productPrice = (it["productPrice"] as Long).toInt(),
+                        productDiscount = (it["productDiscount"] as Long).toInt(),
+                        productRating = it["productRating"] as Double,
+                        productImages = it["productImages"] as? List<String> ?: emptyList(),
+                        cat = it["cat"] as String
+                    )
+                }
+            )
+        }
+    }
 
 
     override suspend fun uploadDataToFirestore() {

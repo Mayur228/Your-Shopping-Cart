@@ -1,4 +1,4 @@
-package com.demo.yourshoppingcart.ui.cart.components
+package com.demo.yourshoppingcart.common
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -16,14 +16,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -34,15 +29,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun EmptyCartView(
-    onStartShopping: (() -> Unit)? = null
+fun EmptyView(
+    icon: ImageVector,
+    title: String,
+    subTitle: String
 ) {
-
-    // Floating animation for the cart icon
     val infinite = rememberInfiniteTransition(label = "")
     val floatAnim by infinite.animateFloat(
         initialValue = 0f,
@@ -82,7 +79,7 @@ fun EmptyCartView(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = Icons.Default.ShoppingCart,
+                imageVector = icon,
                 contentDescription = null,
                 modifier = Modifier
                     .size(90.dp)
@@ -95,7 +92,7 @@ fun EmptyCartView(
 
         // Title
         Text(
-            "Your Cart is Empty",
+            text = title,
             style = MaterialTheme.typography.headlineSmall.copy(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
@@ -106,33 +103,14 @@ fun EmptyCartView(
 
         // Subtitle
         Text(
-            "Add items to your cart to continue shopping.",
+            text = subTitle,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 12.dp),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            textAlign = TextAlign.Center
         )
 
         Spacer(modifier = Modifier.height(26.dp))
-
-        // CTA BUTTON (optional)
-        onStartShopping?.let {
-            Button(
-                onClick = it,
-                shape = RoundedCornerShape(50),
-                modifier = Modifier
-                    .height(48.dp)
-                    .padding(horizontal = 40.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            ) {
-                Icon(Icons.Default.Add, contentDescription = null)
-                Spacer(modifier = Modifier.width(6.dp))
-                Text("Start Shopping")
-            }
-        }
     }
 }
 

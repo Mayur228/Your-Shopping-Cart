@@ -8,13 +8,13 @@ import com.demo.yourshoppingcart.payment.data.model.PaymentModel
 import com.demo.yourshoppingcart.product_details.data.model.ProductDetailsModel
 import com.demo.yourshoppingcart.user.data.model.AddressModel
 import com.demo.yourshoppingcart.user.data.model.UserModel
-import kotlinx.coroutines.flow.Flow
+import com.demo.yourshoppingcart.wish_list.data.model.WishList
 
 interface DocumentApi {
-    suspend fun fetchCategory(): HomeModel.CategoryResponse
-    suspend fun fetchAllItems(): HomeModel.CategoryItemResponse
-    suspend fun fetchSelectedCatItem(cat: String): HomeModel.CategoryItemResponse
-    suspend fun fetchProductDetails(itemId: String): ProductDetailsModel.DetailModel
+    suspend fun fetchCategory(): List<HomeModel.Category>
+    suspend fun fetchAllItems(): List<HomeModel.Product>
+    suspend fun fetchSelectedCatProduct(cat: String): List<HomeModel.Product>
+    suspend fun fetchProductDetails(itemId: String): ProductDetailsModel.Product
     suspend fun addProductToCart(cart: CartModel.Cart)
     suspend fun fetchCart(): CartModel.Cart
     suspend fun updateCartItem(cartId: String,cart: List<CartModel.CartItem>)
@@ -41,4 +41,8 @@ interface DocumentApi {
     suspend fun fetchOrderHistory(): List<OrderModel>
     suspend fun fetchOrderDetails(id: String): OrderModel
     suspend fun addOrdersHistory(order: OrderModel)
+    suspend fun addWishList(product: WishList)
+    suspend fun removeWishList(id: String)
+    suspend fun getWishList(): List<WishList>
+
 }

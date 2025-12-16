@@ -1,36 +1,65 @@
 package com.demo.yourshoppingcart.ui.cart
 
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.filled.Discount
-import androidx.compose.material.icons.filled.AddCard
 import androidx.compose.material.icons.filled.AddHome
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.CurrencyRupee
 import androidx.compose.material.icons.filled.DeliveryDining
+import androidx.compose.material.icons.filled.Discount
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -40,16 +69,15 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import com.demo.yourshoppingcart.common.AddAddressDialog
+import com.demo.yourshoppingcart.common.EmptyView
 import com.demo.yourshoppingcart.payment.data.model.PaymentModel
-import com.demo.yourshoppingcart.ui.checkout.CheckoutViewModel
 import com.demo.yourshoppingcart.ui.cart.components.AddNewOptionCard
 import com.demo.yourshoppingcart.ui.cart.components.AppliedCouponCard
-import com.demo.yourshoppingcart.ui.cart.components.EmptyCartView
-import com.demo.yourshoppingcart.ui.cart.components.PaymentOptionItem
 import com.demo.yourshoppingcart.ui.cart.components.PaymentSection
 import com.demo.yourshoppingcart.ui.cart.components.SummaryRow
 import com.demo.yourshoppingcart.ui.cart.dialog.AddCardDialog
 import com.demo.yourshoppingcart.ui.cart.dialog.AddUpiDialog
+import com.demo.yourshoppingcart.ui.checkout.CheckoutViewModel
 import com.demo.yourshoppingcart.ui.coupon.CouponsState
 import com.demo.yourshoppingcart.ui.coupon.CouponsViewModel
 import com.demo.yourshoppingcart.user.data.model.AddressModel
@@ -82,7 +110,11 @@ fun CartScreen(
 
     // Empty cart
     if (cartItems.isEmpty()) {
-        EmptyCartView()
+        EmptyView(
+            icon = Icons.Default.ShoppingCart,
+            title = "Your Cart is Empty",
+            subTitle = "Add items to your cart to continue shopping."
+        )
         return
     }
 
@@ -120,17 +152,24 @@ fun CartScreen(
                 tonalElevation = 8.dp,
                 shadowElevation = 10.dp
             ) {
-                Column(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp)) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp)
+                ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text("Total Payable", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onBackground)
-                            Text("₹$finalAmount",
+                            Text(
+                                "Total Payable",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            Text(
+                                "₹$finalAmount",
                                 style = MaterialTheme.typography.titleLarge.copy(
                                     fontWeight = FontWeight.Bold
                                 ),
@@ -149,9 +188,20 @@ fun CartScreen(
                         }
                     }
                     Spacer(modifier = Modifier.height(8.dp))
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("${cartItems.size} items", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text("Includes delivery & taxes", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "${cartItems.size} items",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            "Includes delivery & taxes",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
@@ -174,8 +224,18 @@ fun CartScreen(
                         itemDes = item.productDes,
                         itemImg = item.productImg,
                         quantity = item.productQun,
-                        onIncrease = { cartViewModel.createOrUpdateCart(item.productId, item.productQun + 1) },
-                        onDecrease = { cartViewModel.createOrUpdateCart(item.productId, item.productQun - 1) }
+                        onIncrease = {
+                            cartViewModel.createOrUpdateCart(
+                                item.productId,
+                                item.productQun + 1
+                            )
+                        },
+                        onDecrease = {
+                            cartViewModel.createOrUpdateCart(
+                                item.productId,
+                                item.productQun - 1
+                            )
+                        }
                     )
                 }
 
@@ -251,10 +311,22 @@ fun CartScreen(
                             Text("Order Summary", style = MaterialTheme.typography.titleMedium)
                             Spacer(modifier = Modifier.height(12.dp))
 
-                            SummaryRow("Items Total", "₹$itemsTotal",icon = Icons.Default.CurrencyRupee)
-                            SummaryRow("Delivery", "₹$deliveryCharge",icon = Icons.Default.DeliveryDining)
-                            SummaryRow("Tax (10%)", "₹$tax",icon = Icons.Default.Info)
-                            if (discount > 0) SummaryRow("Discount", "-₹$discount", icon = Icons.Default.Discount)
+                            SummaryRow(
+                                "Items Total",
+                                "₹$itemsTotal",
+                                icon = Icons.Default.CurrencyRupee
+                            )
+                            SummaryRow(
+                                "Delivery",
+                                "₹$deliveryCharge",
+                                icon = Icons.Default.DeliveryDining
+                            )
+                            SummaryRow("Tax (10%)", "₹$tax", icon = Icons.Default.Info)
+                            if (discount > 0) SummaryRow(
+                                "Discount",
+                                "-₹$discount",
+                                icon = Icons.Default.Discount
+                            )
 
                             Divider(modifier = Modifier.padding(vertical = 8.dp))
 
@@ -351,7 +423,13 @@ private fun ProductItemCardAPlus(
                             .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(6.dp))
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
-                        Text(text = "-$discount%", style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold))
+                        Text(
+                            text = "-$discount%",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                fontWeight = FontWeight.Bold
+                            )
+                        )
                     }
 
                     // wishlist floating heart
@@ -376,18 +454,42 @@ private fun ProductItemCardAPlus(
                 Spacer(modifier = Modifier.width(12.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(itemName, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text(
+                        itemName,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
                     Spacer(modifier = Modifier.height(6.dp))
-                    Text("₹$itemPrice", style = MaterialTheme.typography.titleMedium.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold))
+                    Text(
+                        "₹$itemPrice",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
                     Spacer(modifier = Modifier.height(6.dp))
-                    Text(itemDes, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        itemDes,
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
 
                 // Floating quantity vertical pill
-                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                    AnimatedContent(targetState = quantity, transitionSpec = { fadeIn(tween(200)) + expandVertically() togetherWith fadeOut(tween(150)) }) { qty ->
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    AnimatedContent(
+                        targetState = quantity,
+                        transitionSpec = {
+                            fadeIn(tween(200)) + expandVertically() togetherWith fadeOut(tween(150))
+                        }) { qty ->
                         if (qty <= 0) {
                             Button(onClick = onIncrease, shape = RoundedCornerShape(50)) {
                                 Icon(Icons.Default.Add, contentDescription = "Add")

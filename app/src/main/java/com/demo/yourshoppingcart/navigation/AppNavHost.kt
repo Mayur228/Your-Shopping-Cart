@@ -11,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -28,6 +29,8 @@ import com.demo.yourshoppingcart.ui.orders.OrdersScreen
 import com.demo.yourshoppingcart.ui.product_details.ProductDetailsScreen
 import com.demo.yourshoppingcart.ui.profile.ProfileScreen
 import com.demo.yourshoppingcart.ui.profile.ProfileViewModel
+import com.demo.yourshoppingcart.ui.wish_list.WishListScreen
+import com.demo.yourshoppingcart.ui.wish_list.WishListViewModel
 import com.demo.yourshoppingcart.user.data.model.UserModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,6 +43,7 @@ fun AppNavHost(
     val cartViewModel: CartViewModel = hiltViewModel()
     val couponsViewModel: CouponsViewModel = hiltViewModel()
     val profileViewModel: ProfileViewModel = hiltViewModel()
+    val wishListViewModel: WishListViewModel = hiltViewModel()
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -51,6 +55,7 @@ fun AppNavHost(
                 NavRoutes.Cart.route,
                 NavRoutes.Orders.route,
                 NavRoutes.Profile.route,
+                NavRoutes.WishList.route,
                 NavRoutes.Coupons.route -> {
                     val cartState by cartViewModel.viewState.collectAsState()
                     val cartItemCount =
@@ -152,6 +157,15 @@ fun AppNavHost(
                     ProfileScreen(
                         profileViewModel = profileViewModel,
                         onLogout = {}
+                    )
+                }
+
+                composable(NavRoutes.WishList.route) {
+                    WishListScreen(
+                        onProductClick = {
+                            navController.navigate(NavRoutes.ProductDetails)
+                        },
+                        viewModel = wishListViewModel
                     )
                 }
             }

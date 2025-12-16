@@ -24,24 +24,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
-import com.demo.yourshoppingcart.home.domain.entity.HomeEntity
+import com.demo.yourshoppingcart.home.data.model.HomeModel
+import com.demo.yourshoppingcart.home.domain.entity.categoryEntity
 
 @Composable
 fun CategoryList(
-    categories: List<HomeEntity.CategoryEntity>,
+    categories: List<categoryEntity>,
     onCategorySelected: (cat: String) -> Unit,
     isDark: Boolean
 ) {
     var selectedCat by remember { mutableStateOf("All") }
 
-    val finalList = listOf(HomeEntity.CategoryEntity(id = "", name = "All", img = "")) + categories
+    val finalList = listOf(categoryEntity(catId = "", catName = "All", catImg = "")) + categories
 
     LazyRow(
         modifier = Modifier.padding(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(finalList) { category ->
-            val isSelected = selectedCat == category.name
+            val isSelected = selectedCat == category.catName
 
             val scale by animateFloatAsState(
                 targetValue = if (isSelected) 1.12f else 1f,
@@ -70,10 +71,10 @@ fun CategoryList(
             ) {
                 AssistChip(
                     onClick = {
-                        selectedCat = category.name
-                        onCategorySelected(category.name)
+                        selectedCat = category.catName
+                        onCategorySelected(category.catName)
                     },
-                    label = { Text(category.name, color = textColor) },
+                    label = { Text(category.catName, color = textColor) },
                     shape = RoundedCornerShape(50),
                     colors = AssistChipDefaults.assistChipColors(containerColor = bgColor)
                 )

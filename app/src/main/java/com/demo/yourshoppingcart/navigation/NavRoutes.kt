@@ -9,10 +9,13 @@ sealed class NavRoutes(
     data object Coupons : NavRoutes("coupons", "Coupons")
     data object Orders : NavRoutes("orders", "My Orders")
     data object Profile : NavRoutes("profile", "Profile")
-
     data object Checkout : NavRoutes("checkout", "CheckOut")
     data object PhoneLogin : NavRoutes("phone_login", "Phone Login")
+    data object WishList : NavRoutes("wish_list", "Wish List")
 
+    data object OrderDetails : NavRoutes("order_details/{id}", null) {
+        fun route(id: String) = "order_details/$id"
+    }
     data object ProductDetails : NavRoutes("product_details/{id}", null) {
         fun route(id: String) = "product_details/$id"
     }

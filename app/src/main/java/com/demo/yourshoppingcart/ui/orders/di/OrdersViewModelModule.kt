@@ -6,7 +6,7 @@ import com.demo.yourshoppingcart.cart.domain.usecase.ClearCartUseCase
 import com.demo.yourshoppingcart.cart.domain.usecase.GetCartUseCase
 import com.demo.yourshoppingcart.cart.domain.usecase.UpdateCartUseCase
 import com.demo.yourshoppingcart.order.domain.usecase.AddOrderHistoryUseCase
-import com.demo.yourshoppingcart.order.domain.usecase.GetOrderDetailsUseCase
+import com.demo.yourshoppingcart.order_details.domain.usecase.GetOrderDetailsUseCase
 import com.demo.yourshoppingcart.order.domain.usecase.GetOrderHistoryUseCase
 import com.demo.yourshoppingcart.payment.domain.usecase.AddPaymentMethodUseCase
 import com.demo.yourshoppingcart.payment.domain.usecase.DeletePaymentMethodUseCase

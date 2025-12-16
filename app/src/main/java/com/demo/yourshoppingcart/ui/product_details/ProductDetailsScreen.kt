@@ -45,16 +45,24 @@ import com.demo.yourshoppingcart.ui.cart.CartViewModel
 import com.demo.yourshoppingcart.common.ErrorView
 import com.demo.yourshoppingcart.common.LoadingView
 import com.demo.yourshoppingcart.product_details.domain.entity.detailsEntity
+import com.demo.yourshoppingcart.ui.wish_list.WishListState
+import com.demo.yourshoppingcart.ui.wish_list.WishListViewModel
+import com.demo.yourshoppingcart.wish_list.domain.entity.wishListEntity
+import kotlin.random.Random
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalUuidApi::class)
 @Composable
 fun ProductDetailsScreen(
     itemId: String,
     onBackClick: () -> Boolean,
     cartViewModel: CartViewModel,
+    wishListViewModel: WishListViewModel
 ) {
     val viewModel = hiltViewModel<ProductDetailsViewModel>()
     val viewState by viewModel.viewState.collectAsState()
+    val wishListState by wishListViewModel.state.collectAsState()
 
     LaunchedEffect(Unit) { viewModel.getItemDetails(itemId) }
 
@@ -66,15 +74,20 @@ fun ProductDetailsScreen(
         is ProductDetailsState.Success -> {
             val product = (viewState as ProductDetailsState.Success).product
 
-            val pagerState = rememberPagerState { product.itemImages.size }
+            val pagerState = rememberPagerState { product.productImages.size }
             val scrollState = rememberScrollState()
 
-            var isWishlisted by remember { mutableStateOf(false) }
+            val isWishListed = remember(wishListState, product.productId) {
+                (wishListState as? WishListState.Success)
+                    ?.list
+                    ?.any { it.product?.productId == product.productId }
+                    ?: false
+            }
 
             val selectedQty =
                 (cartViewModel.viewState.value as? CartState.Success)
                     ?.cartEntity?.cartItem
-                    ?.find { it.productId == product.itemId }
+                    ?.find { it.productId == product.productId }
                     ?.productQun ?: 0
 
             Scaffold(
@@ -107,7 +120,7 @@ fun ProductDetailsScreen(
                             Box(modifier = Modifier.fillMaxSize()) {
 
                                 AsyncImage(
-                                    model = product.itemImages[page],
+                                    model = product.productImages[page],
                                     contentScale = ContentScale.Crop,
                                     contentDescription = null,
                                     modifier = Modifier
@@ -151,7 +164,13 @@ fun ProductDetailsScreen(
                         }
 
                         IconButton(
-                            onClick = { isWishlisted = !isWishlisted },
+                            onClick = {
+                                if (isWishListed) {
+                                    wishListViewModel.removeWishList(product.productId)
+                                } else {
+                                    wishListViewModel.addToWishList(wishList = wishListEntity(id = Uuid.random().toString(), product = product))
+                                }
+                            },
                             modifier = Modifier
                                 .padding(12.dp)
                                 .size(40.dp)
@@ -161,9 +180,9 @@ fun ProductDetailsScreen(
                                 .align(Alignment.TopEnd)
                         ) {
                             Icon(
-                                if (isWishlisted) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                                if (isWishListed) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                                 contentDescription = "Wishlist",
-                                tint = if (isWishlisted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                tint = if (isWishListed) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                             )
                         }
 
@@ -174,7 +193,7 @@ fun ProductDetailsScreen(
                                 .padding(12.dp),
                             horizontalArrangement = Arrangement.Center
                         ) {
-                            repeat(product.itemImages.size) { index ->
+                            repeat(product.productImages.size) { index ->
                                 val selected = pagerState.currentPage == index
                                 Box(
                                     modifier = Modifier
@@ -203,21 +222,21 @@ fun ProductDetailsScreen(
                         Column(modifier = Modifier.padding(16.dp)) {
 
                             Text(
-                                product.itemName,
+                                product.productName,
                                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                             )
 
                             Spacer(Modifier.height(6.dp))
 
                             RatingRow(
-                                rating = 4.5,
+                                rating = product.productRating,
                                 totalReviews = 120
                             )
 
                             Spacer(Modifier.height(8.dp))
 
                             Text(
-                                "₹${product.itemPrice}",
+                                "₹${product.productPrice}",
                                 style = MaterialTheme.typography.titleLarge.copy(
                                     fontWeight = FontWeight.ExtraBold,
                                     color = MaterialTheme.colorScheme.primary
@@ -247,7 +266,7 @@ fun ProductDetailsScreen(
                     )
 
                     Text(
-                        product.itemDescription,
+                        product.productDes,
                         modifier = Modifier.padding(16.dp),
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
                         style = MaterialTheme.typography.bodyMedium
@@ -316,14 +335,14 @@ fun BottomCartBar(
                     Button(
                         onClick = {
                             cartViewModel.createOrUpdateCart(
-                                product.itemId, 1,
+                                product.productId, 1,
                                 cartItem = cartItemEntity(
-                                    productId = product.itemId,
-                                    productName = product.itemName,
-                                    productPrice = product.itemPrice,
+                                    productId = product.productId,
+                                    productName = product.productName,
+                                    productPrice = product.productPrice.toString(),
                                     productQun = 1,
-                                    productDes = product.itemDescription,
-                                    productImg = product.itemImage
+                                    productDes = product.productDes,
+                                    productImg = product.productImg
                                 )
                             )
                         },
@@ -364,7 +383,7 @@ fun BottomCartBar(
 
                         IconButton(
                             onClick = {
-                                cartViewModel.createOrUpdateCart(product.itemId, qty - 1)
+                                cartViewModel.createOrUpdateCart(product.productId, qty - 1)
                             }
                         ) {
                             Icon(
@@ -383,7 +402,7 @@ fun BottomCartBar(
 
                         IconButton(
                             onClick = {
-                                cartViewModel.createOrUpdateCart(product.itemId, qty + 1)
+                                cartViewModel.createOrUpdateCart(product.productId, qty + 1)
                             }
                         ) {
                             Icon(

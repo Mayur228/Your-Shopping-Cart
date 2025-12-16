@@ -3,7 +3,7 @@ package com.demo.yourshoppingcart.order.data.model
 import java.util.Date
 data class OrderModel(
     val id: String,
-    val status: String,            // e.g., "SHIPPING", "DELIVERED"
+    val status: OrderStatus,            // e.g., "SHIPPING", "DELIVERED"
     val totalAmount: String,       // total amount as String (can also be Double if preferred)
     val items: List<OrderItem>,    // list of products in this order
     val paymentMethod: String,     // e.g., "COD", "UPI", "CARD"
@@ -17,7 +17,6 @@ data class OrderModel(
         val productImg: String
     )
 }
-
 
 enum class OrderStatus {
     PENDING,

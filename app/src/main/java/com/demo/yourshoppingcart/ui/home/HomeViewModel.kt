@@ -3,7 +3,8 @@ package com.demo.yourshoppingcart.ui.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.demo.yourshoppingcart.Resource
-import com.demo.yourshoppingcart.home.domain.entity.HomeEntity
+import com.demo.yourshoppingcart.home.domain.entity.categoryEntity
+import com.demo.yourshoppingcart.home.domain.entity.productEntity
 import com.demo.yourshoppingcart.home.domain.usecase.GetAllItemUseCase
 import com.demo.yourshoppingcart.home.domain.usecase.GetCategoryUseCase
 import com.demo.yourshoppingcart.home.domain.usecase.GetSelectedCategoryItemUseCase
@@ -50,11 +51,9 @@ class HomeViewModel @Inject constructor(
             val categoryResult = getCategoryUseCase()
             val itemResult = getAllItemUseCase()
 
-            if (categoryResult is Resource.Data<*> && itemResult is Resource.Data<*>) {
-                val categories =
-                    (categoryResult.value as HomeEntity.CategoryResponseEntity).categoryList
-                val items =
-                    (itemResult.value as HomeEntity.CategoryItemResponseEntity).itemList
+            if (categoryResult is Resource.Data<List<categoryEntity>> && itemResult is Resource.Data<List<productEntity>>) {
+                val categories = categoryResult.value
+                val items = itemResult.value
 
                 _viewState.value = HomeViewState.Success(
                     categories = categories,
@@ -82,8 +81,8 @@ class HomeViewModel @Inject constructor(
             )
 
             val result = getSelectedCategoryItemUseCase(catId = category)
-            if (result is Resource.Data<*>) {
-                val items = (result.value as HomeEntity.CategoryItemResponseEntity).itemList
+            if (result is Resource.Data<List<productEntity>>) {
+                val items = result.value
                 _viewState.value = HomeViewState.Success(
                     categories = currentCategories,
                     items = items,

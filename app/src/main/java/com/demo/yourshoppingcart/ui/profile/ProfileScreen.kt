@@ -1,9 +1,16 @@
 package com.demo.yourshoppingcart.ui.profile
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.demo.yourshoppingcart.common.ErrorView
@@ -11,7 +18,7 @@ import com.demo.yourshoppingcart.common.LoadingView
 import com.demo.yourshoppingcart.payment.data.model.PaymentModel
 import com.demo.yourshoppingcart.ui.cart.dialog.AddCardDialog
 import com.demo.yourshoppingcart.ui.cart.dialog.AddUpiDialog
-import com.demo.yourshoppingcart.ui.profile.components.*
+import com.demo.yourshoppingcart.ui.profile.components.UserHeader
 
 @Composable
 fun ProfileScreen(
@@ -39,10 +46,6 @@ fun ProfileScreen(
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(18.dp)
             ) {
-
-                // ------------------------------
-                // USER HEADER
-                // ------------------------------
                 item {
                     UserHeader(
                         name = user.userName,
@@ -51,9 +54,6 @@ fun ProfileScreen(
                     )
                 }
 
-                // ------------------------------
-                // PAYMENT METHODS SECTION (TABS)
-                // ------------------------------
                 item { SectionTitle("Payment Methods") }
 
                 item {
@@ -61,16 +61,18 @@ fun ProfileScreen(
                         paymentMethods = user.paymentMethods,
                         selectedMethod = user.selectedPaymentMethod,
                         onSelectMethod = { profileViewModel.selectPaymentMethod(it) },
-                        onEditMethod = { id, method -> profileViewModel.updatePaymentMethod(id, method) },
+                        onEditMethod = { id, method ->
+                            profileViewModel.updatePaymentMethod(
+                                id,
+                                method
+                            )
+                        },
                         onDeleteMethod = { profileViewModel.deletePaymentMethod(it) },
                         onShowAddUpiDialog = { showAddUpiDialog = true },
                         onShowAddCardDialog = { showAddCardDialog = true }
                     )
                 }
 
-                // ------------------------------
-                // ADDRESS SECTION
-                // ------------------------------
                 item { SectionTitle("Your Addresses") }
 
                 if (user.address.isEmpty()) {
@@ -86,15 +88,8 @@ fun ProfileScreen(
                     item { AddAddressButton { showAddAddressDialog = true } }
                 }
 
-                // ------------------------------
-                // LOGOUT SECTION
-                // ------------------------------
                 item { LogoutCard(onLogout = onLogout) }
             }
-
-            // ------------------------------
-            // DIALOGS
-            // ------------------------------
 
             if (showAddUpiDialog) {
                 AddUpiDialog(

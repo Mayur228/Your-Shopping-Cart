@@ -19,7 +19,7 @@ import com.demo.yourshoppingcart.coupon.domain.usecase.ApplyCouponUseCase
 import com.demo.yourshoppingcart.coupon.domain.usecase.GetCouponsUseCase
 import com.demo.yourshoppingcart.coupon.domain.usecase.RemoveCouponUseCase
 import com.demo.yourshoppingcart.order.domain.usecase.AddOrderHistoryUseCase
-import com.demo.yourshoppingcart.order.domain.usecase.GetOrderDetailsUseCase
+import com.demo.yourshoppingcart.order_details.domain.usecase.GetOrderDetailsUseCase
 import com.demo.yourshoppingcart.order.domain.usecase.GetOrderHistoryUseCase
 import com.demo.yourshoppingcart.payment.domain.usecase.AddPaymentMethodUseCase
 import com.demo.yourshoppingcart.payment.domain.usecase.DeletePaymentMethodUseCase
@@ -32,6 +32,9 @@ import com.demo.yourshoppingcart.user.domain.usecase.CheckUserUseCase
 import com.demo.yourshoppingcart.user.domain.usecase.DeleteAddressUseCase
 import com.demo.yourshoppingcart.user.domain.usecase.UpdateAddressUseCase
 import com.demo.yourshoppingcart.user.domain.usecase.UpdateUserUseCase
+import com.demo.yourshoppingcart.wish_list.domain.usecase.AddToWishListUseCase
+import com.demo.yourshoppingcart.wish_list.domain.usecase.GetWishListUseCase
+import com.demo.yourshoppingcart.wish_list.domain.usecase.RemoveWishListUseCase
 import org.koin.core.context.GlobalContext.get
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
@@ -158,8 +161,21 @@ object Core {
 
         val getOrderHistoryUseCase: GetOrderHistoryUseCase
             get() = get().get()
+    }
 
+    object OrderDetails {
         val getOrderDetailsUseCase: GetOrderDetailsUseCase
+            get() = get().get()
+    }
+
+    object WishList {
+        val addToWishListUseCase: AddToWishListUseCase
+            get() = get().get()
+
+        val getWishListUseCase: GetWishListUseCase
+            get() = get().get()
+
+        val removeWishListUseCase: RemoveWishListUseCase
             get() = get().get()
     }
 }

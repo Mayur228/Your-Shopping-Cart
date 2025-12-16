@@ -7,16 +7,14 @@ import com.demo.yourshoppingcart.product_details.data.model.ProductDetailsModel
 import org.koin.core.annotation.Factory
 
 interface ProductDetailsSource {
-    suspend fun getProductDetails(itemId: String): ProductDetailsModel.DetailModel
+    suspend fun getProductDetails(itemId: String): ProductDetailsModel.Product
 }
 
 @Factory
 class ProductDetailsSourceImpl(
-    private val appHttpClient: AppHttpClient,
-    private val apiDomains: ApiDomains,
     private val documentApi: DocumentApi
 ): ProductDetailsSource {
-    override suspend fun getProductDetails(itemId: String): ProductDetailsModel.DetailModel {
+    override suspend fun getProductDetails(itemId: String): ProductDetailsModel.Product {
        return documentApi.fetchProductDetails(itemId = itemId)
     }
 

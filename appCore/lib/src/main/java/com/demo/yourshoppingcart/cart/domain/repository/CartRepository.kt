@@ -9,7 +9,7 @@ interface CartRepository {
     suspend fun addCart(cart: CartModel.Cart): Resource<Unit>
     suspend fun getCart(): Resource<cartEntity>
     //suspend fun getUser(): Resource<UserModel.UserResponse>
-    suspend fun fetchProducts(productids: List<String>): Resource<List<HomeModel.Item>>
+    suspend fun fetchProducts(productids: List<String>): Resource<List<HomeModel.Product>>
     suspend fun updateCart(cartId: String, cart: List<CartModel.CartItem>): Resource<String>
     suspend fun clearCart():Resource<String>
 

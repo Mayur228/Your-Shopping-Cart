@@ -15,8 +15,4 @@ class OrderRepositoryImpl(private val source: OrderSource): OrderRepository {
     override suspend fun getOrderHistory(): Resource<List<OrderModel>> {
         return source.getOrderHistory()
     }
-
-    override suspend fun getOrderDetails(id: String): Resource<OrderModel> {
-        return source.getOrderDetails(id = id)
-    }
 }

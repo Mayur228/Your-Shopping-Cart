@@ -38,7 +38,7 @@ class CartRepositoryImpl(private val source: CartSource) : CartRepository {
         }
     }*/
 
-    override suspend fun fetchProducts(productids: List<String>): Resource<List<HomeModel.Item>> {
+    override suspend fun fetchProducts(productids: List<String>): Resource<List<HomeModel.Product>> {
         /*return try {
             val data = source.fetchProducts(
                 productids

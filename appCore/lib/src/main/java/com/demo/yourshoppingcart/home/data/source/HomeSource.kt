@@ -7,27 +7,25 @@ import com.demo.yourshoppingcart.home.data.model.HomeModel
 import org.koin.core.annotation.Factory
 
 interface HomeSource {
-    suspend fun getCategory(): HomeModel.CategoryResponse
-    suspend fun getAllCategoryItem(): HomeModel.CategoryItemResponse
-    suspend fun getSelectedCategoryItem(cat: String): HomeModel.CategoryItemResponse
+    suspend fun getCategory(): List<HomeModel.Category>
+    suspend fun getAllCategoryItem(): List<HomeModel.Product>
+    suspend fun getSelectedCategoryItem(cat: String): List<HomeModel.Product>
 }
 
 @Factory
 class HomeSourceImpl(
-    private val appHttpClient: AppHttpClient,
-    private val apiDomains: ApiDomains,
     private val documentApi: DocumentApi
 ): HomeSource {
-    override suspend fun getCategory(): HomeModel.CategoryResponse {
+    override suspend fun getCategory(): List<HomeModel.Category> {
         return documentApi.fetchCategory()
     }
 
-    override suspend fun getAllCategoryItem(): HomeModel.CategoryItemResponse {
+    override suspend fun getAllCategoryItem(): List<HomeModel.Product> {
         return documentApi.fetchAllItems()
     }
 
-    override suspend fun getSelectedCategoryItem(cat: String): HomeModel.CategoryItemResponse {
-        return documentApi.fetchSelectedCatItem(cat = cat)
+    override suspend fun getSelectedCategoryItem(cat: String): List<HomeModel.Product> {
+        return documentApi.fetchSelectedCatProduct(cat = cat)
     }
 
 }

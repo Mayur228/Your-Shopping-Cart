@@ -2,12 +2,15 @@ package com.demo.yourshoppingcart.product_details.data.model
 
 abstract class ProductDetailsModel {
 
-    data class DetailModel(
-        val itemId: String,
-        val itemName: String,
-        val itemDescription: String,
-        val itemImages: List<String>,
-        val itemImage: String,
-        val itemPrice: String
+    data class Product(
+        val productId: String,
+        val productName: String,
+        val productImg: String,
+        val productDes: String,
+        val productPrice: Int,
+        val productDiscount: Int,
+        val productRating: Double,
+        val productImages: List<String>,
+        val cat: String
     )
 }

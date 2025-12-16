@@ -12,7 +12,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class ProductDetailsViewModel @Inject constructor(private val getProductDetailsUseCase: GetProductDetailsUseCase): ViewModel() {
+class ProductDetailsViewModel @Inject constructor(
+    private val getProductDetailsUseCase: GetProductDetailsUseCase
+) : ViewModel() {
 
     private val _viewState = MutableStateFlow<ProductDetailsState>(ProductDetailsState.Loading)
     val viewState: StateFlow<ProductDetailsState> = _viewState
@@ -28,7 +30,9 @@ class ProductDetailsViewModel @Inject constructor(private val getProductDetailsU
                 }
 
                 is Resource.Error -> {
-                    _viewState.value = ProductDetailsState.Error(error = result.throwable.message ?: "Something went wrong")
+                    _viewState.value = ProductDetailsState.Error(
+                        error = result.throwable.message ?: "Something went wrong"
+                    )
                 }
             }
         }

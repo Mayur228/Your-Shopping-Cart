@@ -9,7 +9,7 @@ import org.koin.core.annotation.Factory
 interface CartSource {
     suspend fun getCart(): CartModel.Cart
     suspend fun addCart(cart: CartModel.Cart)
-    suspend fun fetchProducts(productId: String): ProductDetailsModel.DetailModel
+    suspend fun fetchProducts(productId: String): ProductDetailsModel.Product
     suspend fun updateCart(cartId: String,cart: List<CartModel.CartItem>)
     suspend fun clearCart()
 }
@@ -26,7 +26,7 @@ class CartResourceImpl(
         return documentApi.addProductToCart(cart = cart)
     }
 
-    override suspend fun fetchProducts(productId: String): ProductDetailsModel.DetailModel {
+    override suspend fun fetchProducts(productId: String): ProductDetailsModel.Product {
         return documentApi.fetchProductDetails(productId)
     }
 

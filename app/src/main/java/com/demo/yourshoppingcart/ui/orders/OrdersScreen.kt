@@ -1,24 +1,40 @@
 package com.demo.yourshoppingcart.ui.orders
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocalShipping
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.ShoppingBag
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.demo.yourshoppingcart.common.EmptyView
 import com.demo.yourshoppingcart.common.ErrorView
 import com.demo.yourshoppingcart.common.LoadingView
 import com.demo.yourshoppingcart.order.data.model.OrderModel
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Locale
 
 @Composable
 fun OrdersScreen(
@@ -40,7 +56,11 @@ fun OrdersScreen(
             val orders = (orderState as OrdersState.Success).orderList
 
             if (orders.isEmpty()) {
-                EmptyOrdersView()
+                EmptyView(
+                    icon = Icons.Default.ShoppingBag,
+                    title = "No Orders Yet",
+                    subTitle = "You haven’t placed any order yet."
+                )
             } else {
                 LazyColumn(
                     modifier = Modifier
@@ -65,7 +85,6 @@ fun OrderCard(order: OrderModel) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Order Header: ID, Status, Date
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -75,7 +94,7 @@ fun OrderCard(order: OrderModel) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.LocalShipping, contentDescription = null)
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(order.status, style = MaterialTheme.typography.bodyMedium)
+                    Text(text = order.status.name, style = MaterialTheme.typography.bodyMedium)
                 }
             }
 
@@ -112,41 +131,6 @@ fun OrderCard(order: OrderModel) {
 
             // Total Amount
             Text("Total: ₹${order.totalAmount}", style = MaterialTheme.typography.bodyLarge)
-        }
-    }
-}
-
-@Composable
-fun EmptyOrdersView() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(32.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-
-            Icon(
-                imageVector = Icons.Default.LocalShipping,
-                contentDescription = null,
-                modifier = Modifier.size(64.dp),
-                tint = Color.Gray
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = "No Orders Yet",
-                style = MaterialTheme.typography.titleMedium
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "You haven’t placed any order yet.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray
-            )
         }
     }
 }

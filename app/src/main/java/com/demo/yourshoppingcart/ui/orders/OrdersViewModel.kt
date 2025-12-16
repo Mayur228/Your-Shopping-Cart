@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.demo.yourshoppingcart.Resource
 import com.demo.yourshoppingcart.order.domain.entity.orderEntity
 import com.demo.yourshoppingcart.order.domain.usecase.AddOrderHistoryUseCase
-import com.demo.yourshoppingcart.order.domain.usecase.GetOrderDetailsUseCase
+import com.demo.yourshoppingcart.order_details.domain.usecase.GetOrderDetailsUseCase
 import com.demo.yourshoppingcart.order.domain.usecase.GetOrderHistoryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

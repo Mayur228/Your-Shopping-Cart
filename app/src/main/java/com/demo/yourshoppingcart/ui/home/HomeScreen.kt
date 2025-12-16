@@ -13,6 +13,7 @@ import com.demo.yourshoppingcart.ui.cart.CartViewModel
 import com.demo.yourshoppingcart.ui.home.component.CategoryList
 import com.demo.yourshoppingcart.ui.home.component.HomeHeader
 import com.demo.yourshoppingcart.ui.home.component.ItemList
+import com.demo.yourshoppingcart.ui.wish_list.WishListViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -22,6 +23,7 @@ fun HomeScreen(
     onCartClick: () -> Unit,
     onItemClick: (itemId: String) -> Unit,
     cartViewModel: CartViewModel,
+    wishListViewModel: WishListViewModel
 ) {
     val homeViewModel = hiltViewModel<HomeViewModel>()
     val view by homeViewModel.viewState.collectAsState()
@@ -81,7 +83,8 @@ fun HomeScreen(
                             items = product.items,
                             onItemSelected = { onItemClick(it) },
                             cartViewModel = cartViewModel,
-                            isDark = isDarkMode
+                            isDark = isDarkMode,
+                            wishListViewModel = wishListViewModel
                         )
                     }
                 }
