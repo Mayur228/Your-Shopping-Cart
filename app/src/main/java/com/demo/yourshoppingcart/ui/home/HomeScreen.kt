@@ -23,7 +23,6 @@ fun HomeScreen(
     onCartClick: () -> Unit,
     onItemClick: (itemId: String) -> Unit,
     cartViewModel: CartViewModel,
-    wishListViewModel: WishListViewModel
 ) {
     val homeViewModel = hiltViewModel<HomeViewModel>()
     val view by homeViewModel.viewState.collectAsState()
@@ -84,7 +83,6 @@ fun HomeScreen(
                             onItemSelected = { onItemClick(it) },
                             cartViewModel = cartViewModel,
                             isDark = isDarkMode,
-                            wishListViewModel = wishListViewModel
                         )
                     }
                 }

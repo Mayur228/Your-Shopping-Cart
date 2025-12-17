@@ -75,12 +75,10 @@ fun ItemList(
     onItemSelected: (itemId: String) -> Unit,
     cartViewModel: CartViewModel,
     isDark: Boolean,
-    wishListViewModel: WishListViewModel
 ) {
 
     val cartState by cartViewModel.viewState.collectAsState()
     val cartItems = (cartState as? CartState.Success)?.cartEntity?.cartItem ?: emptyList()
-    val wishListState by wishListViewModel.state.collectAsState()
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
@@ -210,45 +208,6 @@ fun ItemList(
                                 )
                             }
 
-                            // Wishlist button
-                            val isWishListed = remember(wishListState, item.productId) {
-                                (wishListState as? WishListState.Success)
-                                    ?.list
-                                    ?.any { it.product?.productId == item.productId }
-                                    ?: false
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .align(Alignment.TopEnd)
-                                    .padding(8.dp)
-                                    .size(38.dp)
-                                    .background(
-                                        if (isDark) Color.Black.copy(alpha = 0.45f)
-                                        else Color.White.copy(alpha = 0.75f),
-                                        CircleShape
-                                    )
-                                    .clickable {
-                                        if (isWishListed) {
-                                            wishListViewModel.removeWishList(item.productId)
-                                        } else {
-                                            wishListViewModel.addToWishList(
-                                                wishList = wishListEntity(
-                                                    id = Uuid.random().toString(),
-                                                    product = null //need to fix this
-                                                )
-                                            )
-                                        }
-                                    },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = if (isWishListed) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                                    contentDescription = null,
-                                    tint = if (isWishListed)
-                                        MaterialTheme.colorScheme.error
-                                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
-                                )
-                            }
                         }
 
                         Spacer(Modifier.height(10.dp))

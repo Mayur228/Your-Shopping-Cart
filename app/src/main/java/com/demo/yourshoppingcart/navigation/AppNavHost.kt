@@ -103,7 +103,7 @@ fun AppNavHost(
                             )
                         },
                         cartViewModel = cartViewModel,
-                        isDark = isDarkTheme
+                        isDark = isDarkTheme,
                     )
                 }
 
@@ -131,7 +131,8 @@ fun AppNavHost(
                     ProductDetailsScreen(
                         itemId = id,
                         onBackClick = { navController.popBackStack() },
-                        cartViewModel = cartViewModel
+                        cartViewModel = cartViewModel,
+                        wishListViewModel = wishListViewModel
                     )
                 }
 
@@ -163,7 +164,7 @@ fun AppNavHost(
                 composable(NavRoutes.WishList.route) {
                     WishListScreen(
                         onProductClick = {
-                            navController.navigate(NavRoutes.ProductDetails)
+                            navController.navigate(NavRoutes.ProductDetails.route(id = it))
                         },
                         viewModel = wishListViewModel
                     )
